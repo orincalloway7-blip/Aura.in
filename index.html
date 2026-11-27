@@ -1,0 +1,3057 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AURA Marketplace — India's Multi-Vendor Storefront & Seller Hub</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            aura: {
+              dark: '#0f172a',
+              navy: '#131921',
+              subnav: '#232f3e',
+              amber: '#f59e0b',
+              indigo: '#4f46e5',
+              emerald: '#059669'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-card { animation: fadeSlideUp 0.3s ease-out forwards; }
+
+    /* Interactive Hover-to-Zoom Lens Container */
+    .zoom-container {
+      overflow: hidden;
+      position: relative;
+      cursor: zoom-in;
+    }
+    .zoom-container img {
+      transition: transform 0.15s ease-out;
+      transform-origin: center center;
+    }
+
+    /* Print Styles for GST Tax Invoice */
+    @media print {
+      body * { visibility: hidden; }
+      #invoice-print-area, #invoice-print-area * { visibility: visible; }
+      #invoice-print-area {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+        padding: 20px;
+        box-shadow: none;
+      }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 antialiased selection:bg-indigo-600 selection:text-white">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[120] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+  <!-- Abandoned Cart Recovery Simulated Alert Banner -->
+  <div id="abandoned-cart-banner" class="hidden fixed bottom-5 left-5 z-[90] max-w-sm w-[calc(100%-2.5rem)] bg-slate-900 text-white rounded-2xl shadow-2xl border border-emerald-500/40 p-4 animate-card">
+    <div class="flex items-start gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+        <i data-lucide="message-circle" class="w-5 h-5"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">WhatsApp Cart Recovery</span>
+          <button onclick="dismissAbandonedBanner()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <p class="text-xs text-slate-200 mt-1 leading-relaxed">
+          Still thinking about items in your cart? Complete your order now with code <strong class="text-amber-400">WELCOME10</strong> for 10% OFF!
+        </p>
+        <div class="mt-2.5 flex items-center gap-2">
+          <button onclick="applyRecoveryCoupon()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+            Apply Code & Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Flash Sale & Multi-Vendor Announcement Bar -->
+  <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white text-xs py-2 px-4 border-b border-white/10">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[10px] uppercase tracking-wider">
+          <i data-lucide="zap" class="w-3 h-3 fill-slate-950"></i> Flash Deal
+        </span>
+        <span class="font-medium text-slate-200">Up to 40% Off Verified Indian Brands &bull; Ends in:</span>
+        <span id="flash-timer" class="font-mono font-bold text-amber-400 bg-white/10 px-2 py-0.5 rounded-md">02:45:19</span>
+      </div>
+      <div class="hidden md:flex items-center gap-4 text-[11px] text-slate-300">
+        <button onclick="filterFlashDeals()" class="hover:text-amber-400 underline underline-offset-2 font-semibold transition">Shop Flash Deals</button>
+        <span>&bull;</span>
+        <button onclick="openAuthModal('seller')" class="hover:text-emerald-400 font-semibold transition">Sell on AURA (Only <span id="top-commission-rate">10</span>% Commission)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Amazon-Style Executive Header -->
+  <header class="sticky top-0 z-40 bg-[#131921] text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-[68px] gap-3 sm:gap-5">
+        
+        <!-- Brand Logo -->
+        <a href="#" onclick="resetAllFilters(); return false;" class="flex items-center gap-2.5 shrink-0 group">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 shadow-md group-hover:scale-105 transition-transform">
+            <i data-lucide="shopping-bag" class="w-5 h-5 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <span class="font-display font-extrabold text-xl tracking-tight text-white">AURA<span class="text-amber-400">.in</span></span>
+            <span class="hidden sm:block text-[9px] font-bold uppercase tracking-widest text-slate-400 -mt-1">Multi-Vendor Mall</span>
+          </div>
+        </a>
+
+        <!-- PIN Code Quick Delivery Trigger (Desktop) -->
+        <button onclick="openPinModal()" class="hidden xl:flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-white/10 text-left transition shrink-0">
+          <i data-lucide="map-pin" class="w-4 h-4 text-amber-400 shrink-0"></i>
+          <div>
+            <span class="block text-[10px] text-slate-400 leading-none">Deliver to <span id="header-user-short">India</span></span>
+            <span id="header-pincode-display" class="text-xs font-bold text-white">Mumbai 400001</span>
+          </div>
+        </button>
+
+        <!-- Unified Marketplace Search Bar -->
+        <div class="hidden md:flex flex-1 max-w-2xl">
+          <div class="flex w-full rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-amber-400">
+            <select id="header-category-select" onchange="selectCategory(this.value)" class="bg-slate-100 text-slate-700 text-xs font-semibold px-3 border-r border-slate-200 outline-none cursor-pointer">
+              <option value="All">All</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Home & Living">Home</option>
+              <option value="Accessories">Watches & Bags</option>
+              <option value="Art & Craft">Art & Craft</option>
+            </select>
+            <div class="relative flex-1">
+              <input 
+                type="text" 
+                id="desktop-search" 
+                placeholder="Search products, brands, HSN codes, or verified sellers..." 
+                class="w-full px-3.5 py-2.5 text-slate-900 text-sm outline-none"
+              />
+              <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <button onclick="renderProducts()" class="bg-amber-400 hover:bg-amber-500 text-slate-950 px-4 flex items-center justify-center transition">
+              <i data-lucide="search" class="w-4 h-4 stroke-[2.5]"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Controls: Role Switcher, Orders, Wishlist, Cart -->
+        <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          
+          <!-- Active Role / Account Button -->
+          <button 
+            onclick="openAuthModal()" 
+            class="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition"
+            title="Switch Account Role (Buyer, Seller, Super Admin)"
+          >
+            <div id="role-avatar-badge" class="w-7 h-7 rounded-lg bg-indigo-500 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              B
+            </div>
+            <div class="hidden sm:block">
+              <div class="flex items-center gap-1">
+                <span id="header-role-pill" class="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">Buyer</span>
+              </div>
+              <p id="header-account-name" class="text-xs font-bold text-white truncate max-w-[100px]">Aarav Sharma</p>
+            </div>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+
+          <!-- Role-Specific Studio / Admin Action Button -->
+          <button 
+            id="role-dashboard-btn"
+            onclick="openRoleWorkspace()" 
+            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition"
+          >
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span id="role-dashboard-label">My Orders</span>
+          </button>
+
+          <!-- Wishlist Trigger -->
+          <button 
+            onclick="openWishlistModal()" 
+            class="relative p-2.5 rounded-xl hover:bg-white/10 text-slate-200 hover:text-rose-400 transition"
+            title="Saved Wishlist"
+          >
+            <i data-lucide="heart" class="w-5 h-5"></i>
+            <span id="wishlist-badge" class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+              0
+            </span>
+          </button>
+
+          <!-- Shopping Cart Trigger -->
+          <button 
+            onclick="toggleCartDrawer(true)" 
+            class="relative flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs transition"
+            aria-label="Open Cart"
+          >
+            <i data-lucide="shopping-cart" class="w-4 h-4 stroke-[2.5]"></i>
+            <span class="hidden md:inline">Cart</span>
+            <span id="cart-badge" class="min-w-[20px] h-5 px-1 rounded-full bg-slate-950 text-amber-400 text-[11px] font-extrabold flex items-center justify-center">
+              0
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Search Bar -->
+      <div class="pb-3 md:hidden">
+        <div class="relative flex w-full rounded-xl overflow-hidden bg-white">
+          <input 
+            type="text" 
+            id="mobile-search" 
+            placeholder="Search products, brands, sellers..." 
+            class="w-full px-3.5 py-2 text-slate-900 text-sm outline-none"
+          />
+          <button onclick="renderProducts()" class="bg-amber-400 text-slate-950 px-3.5 flex items-center justify-center">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Navigation Strip (Quick Role & Storefront Tabs) -->
+    <div class="bg-[#232f3e] text-slate-200 text-xs border-t border-white/5">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-10 overflow-x-auto no-scrollbar gap-4">
+        <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+          <button onclick="setMainView('storefront')" id="nav-tab-storefront" class="px-2.5 py-1 rounded-md bg-white/15 text-white font-semibold flex items-center gap-1.5">
+            <i data-lucide="store" class="w-3.5 h-3.5 text-amber-400"></i> Marketplace
+          </button>
+          <button onclick="openOrdersModal()" class="px-2.5 py-1 rounded-md hover:bg-white/10 font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="package" class="w-3.5 h-3.5 text-sky-400"></i> Track Orders
+            <span id="nav-orders-count" class="bg-white/10 px-1.5 rounded text-[10px]">0</span>
+          </button>
+          <button onclick="openSellerStudio()" class="px-2.5 py-1 rounded-md hover:bg-white/10 font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-400"></i> Seller Hub
+          </button>
+          <button onclick="openAdminPanel()" class="px-2.5 py-1 rounded-md hover:bg-white/10 font-medium flex items-center gap-1.5 transition">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400"></i> Super Admin
+            <span id="nav-pending-badge" class="hidden bg-rose-500 text-white px-1.5 rounded-full text-[10px] font-bold">0</span>
+          </button>
+        </div>
+
+        <!-- Quick Demo Role Switcher Pills -->
+        <div class="hidden lg:flex items-center gap-1.5 shrink-0 text-[11px]">
+          <span class="text-slate-400">Instant Demo Switch:</span>
+          <button onclick="switchDemoRole('buyer')" class="px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-white font-medium transition">Buyer</button>
+          <button onclick="switchDemoRole('seller1')" class="px-2 py-0.5 rounded bg-indigo-600/80 hover:bg-indigo-600 text-white font-medium transition">Seller: UrbanCraft</button>
+          <button onclick="switchDemoRole('admin')" class="px-2 py-0.5 rounded bg-amber-500/90 hover:bg-amber-500 text-slate-950 font-bold transition">Super Admin</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       MAIN VIEW 1: MULTI-VENDOR STOREFRONT
+  ====================================================================== -->
+  <div id="view-storefront">
+    <!-- Executive Hero Banner -->
+    <section class="relative bg-gradient-to-br from-slate-900 via-[#1a2436] to-indigo-950 text-white overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(#ffffff12_1px,transparent_1px)] [background-size:24px_24px]"></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-7 space-y-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-amber-300 text-xs font-semibold">
+              <i data-lucide="verified" class="w-3.5 h-3.5"></i>
+              <span>India's Multi-Vendor Marketplace &bull; 2026 GST Compliant</span>
+            </div>
+            <h1 class="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15]">
+              Shop thousands of curated products or <span class="text-amber-400">launch your vendor store</span> on AURA.
+            </h1>
+            <p class="text-slate-300 text-sm sm:text-base max-w-2xl leading-relaxed">
+              Explore verified independent sellers with multi-variant options, live PIN-code delivery estimates, instant Razorpay-style checkout, and automated GST tax invoices.
+            </p>
+            <div class="flex flex-wrap items-center gap-3 pt-2">
+              <a href="#marketplace-catalog" class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition">
+                Explore Marketplace
+              </a>
+              <button onclick="openSellerStudio()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm transition flex items-center gap-2">
+                <i data-lucide="store" class="w-4 h-4 text-emerald-400"></i>
+                <span>Open Vendor Dashboard</span>
+              </button>
+              <button onclick="openAdminPanel()" class="px-4 py-3 rounded-xl bg-indigo-600/40 hover:bg-indigo-600/60 border border-indigo-400/30 text-indigo-200 font-semibold text-sm transition flex items-center gap-2">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                <span>Admin Approvals</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Featured Verified Vendors Card -->
+          <div class="lg:col-span-5">
+            <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-300">Verified Mall Vendors</span>
+                <span id="active-vendors-count" class="text-xs text-slate-300">4 Active Stores</span>
+              </div>
+              <div id="featured-vendors-list" class="grid grid-cols-2 gap-2.5">
+                <!-- Rendered via JS -->
+              </div>
+              <div class="pt-2 border-t border-white/10 flex items-center justify-between text-xs text-slate-300">
+                <span>Want to sell your brand here?</span>
+                <button onclick="openAuthModal('seller')" class="text-amber-400 font-bold hover:underline">Register Store &rarr;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Marketplace Catalog -->
+    <main id="marketplace-catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- Active Vendor Filter Banner (Shown when browsing a specific seller's shop) -->
+      <div id="vendor-filter-banner" class="hidden mb-6 p-4 rounded-2xl bg-indigo-900 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-amber-400 text-slate-950 font-extrabold flex items-center justify-center text-lg">
+            <i data-lucide="store" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-300">Official Vendor Storefront</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">GST Verified</span>
+            </div>
+            <h2 id="vendor-banner-name" class="font-display text-lg font-extrabold">Vendor Name</h2>
+          </div>
+        </div>
+        <button onclick="clearVendorFilter()" class="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-xs font-bold transition">
+          &larr; Back to All Marketplace Sellers
+        </button>
+      </div>
+
+      <!-- Category Pills & Sorting Toolbar -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+        <div id="category-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+          <!-- Category buttons injected via JS -->
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button 
+            id="flash-filter-btn"
+            onclick="toggleFlashOnly()" 
+            class="px-3 py-2 rounded-xl text-xs font-bold border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 flex items-center gap-1.5 transition"
+          >
+            <i data-lucide="zap" class="w-3.5 h-3.5 fill-amber-500 text-amber-600"></i>
+            <span>Flash Deals</span>
+          </button>
+
+          <span id="results-count" class="text-xs text-slate-500 font-semibold px-1">0 products</span>
+
+          <select 
+            id="sort-select" 
+            onchange="handleSortChange(this.value)"
+            class="bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl px-3 py-2 outline-none focus:border-indigo-500 cursor-pointer shadow-2xs"
+          >
+            <option value="featured">Sort: Featured</option>
+            <option value="rating">Top Customer Rated</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="newest">Newest Arrivals</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Product Cards Grid -->
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="hidden text-center py-16 px-4 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="search-x" class="w-7 h-7"></i>
+        </div>
+        <h3 class="font-display text-lg font-bold text-slate-900">No products match your filters</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">Try clearing your search or category filter to explore all verified vendor listings.</p>
+        <button onclick="resetAllFilters()" class="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition">
+          Reset All Filters
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-[#131921] text-slate-300 mt-16 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div class="md:col-span-2 space-y-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-bold">
+              <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+            </div>
+            <span class="font-display font-extrabold text-lg text-white">AURA.in Marketplace</span>
+          </div>
+          <p class="text-xs text-slate-400 max-w-md leading-relaxed">
+            A multi-vendor e-commerce ecosystem built for Indian merchants and shoppers. Features 2026 GST slab compliance (5% / 18%), HSN invoicing, variant SKUs, Shiprocket PIN logistics, and role-based vendor governance.
+          </p>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">Marketplace Portals</h4>
+          <ul class="space-y-2 text-xs text-slate-400">
+            <li><button onclick="openAuthModal('buyer')" class="hover:text-amber-400 transition">Buyer Account & Orders</button></li>
+            <li><button onclick="openSellerStudio()" class="hover:text-amber-400 transition">Seller Studio & Product Upload</button></li>
+            <li><button onclick="openAdminPanel()" class="hover:text-amber-400 transition">Super Admin Governance</button></li>
+            <li><button onclick="triggerAbandonedCartDemo()" class="hover:text-emerald-400 transition">Test Cart Recovery Alert</button></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-white mb-3">Demo Utilities</h4>
+          <ul class="space-y-2 text-xs text-slate-400">
+            <li><button onclick="openPinModal()" class="hover:text-white transition">Change Delivery PIN Code</button></li>
+            <li><button onclick="resetFullMarketplace()" class="text-rose-400 hover:text-rose-300 transition">Reset All Marketplace Data</button></li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-slate-800 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
+        <p>&copy; 2026 AURA Multi-Vendor E-Commerce Platform (INR ₹). All rights reserved.</p>
+        <p>GSTIN Compliant &bull; Shiprocket Ready &bull; Razorpay Checkout Simulation</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =====================================================================
+       MODAL 1: ROLE-BASED AUTHENTICATION & ACCOUNT SWITCHER
+  ====================================================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs" onclick="closeModal('auth-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div>
+            <h2 class="font-display font-bold text-lg">AURA Identity & Role Switcher</h2>
+            <p class="text-xs text-slate-400">Switch between Buyer, Verified Vendor, or Super Admin—or register a new account.</p>
+          </div>
+          <button onclick="closeModal('auth-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Instant Demo Role Cards -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">1-Click Demo Role Access</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onclick="switchDemoRole('buyer'); closeModal('auth-modal');" class="p-3.5 rounded-xl border-2 border-slate-200 hover:border-emerald-500 text-left transition group">
+                <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">Buyer</span>
+                <p class="font-bold text-sm text-slate-900 mt-1.5">Aarav Sharma</p>
+                <p class="text-[11px] text-slate-500">Shop, review & track orders</p>
+              </button>
+              <button onclick="switchDemoRole('seller1'); closeModal('auth-modal');" class="p-3.5 rounded-xl border-2 border-slate-200 hover:border-indigo-500 text-left transition group">
+                <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase">Vendor</span>
+                <p class="font-bold text-sm text-slate-900 mt-1.5">UrbanCraft Studio</p>
+                <p class="text-[11px] text-slate-500">Upload SKUs & ship orders</p>
+              </button>
+              <button onclick="switchDemoRole('admin'); closeModal('auth-modal');" class="p-3.5 rounded-xl border-2 border-slate-200 hover:border-amber-500 text-left transition group">
+                <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold uppercase">Super Admin</span>
+                <p class="font-bold text-sm text-slate-900 mt-1.5">Platform Owner</p>
+                <p class="text-[11px] text-slate-500">Approve listings & commissions</p>
+              </button>
+            </div>
+          </div>
+
+          <div class="relative flex items-center justify-center">
+            <div class="border-t border-slate-200 w-full"></div>
+            <span class="bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase">Or Register / Sign In</span>
+          </div>
+
+          <!-- Custom Registration Form (Buyer or New Seller Store) -->
+          <form onsubmit="handleCustomAccountRegister(event)" class="space-y-3.5">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Account Type</label>
+                <select id="auth-role-select" onchange="toggleSellerRegFields(this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none focus:border-indigo-500">
+                  <option value="buyer">Customer / Buyer</option>
+                  <option value="seller">Seller / Brand Vendor</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+                <input type="text" id="auth-name" required placeholder="Priya Nair" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Email or Mobile (+91) *</label>
+                <input type="text" id="auth-contact" required placeholder="priya@brand.in" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">OTP / Password *</label>
+                <input type="password" id="auth-pass" required value="123456" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+              </div>
+            </div>
+
+            <!-- Extra Seller Store Registration Fields -->
+            <div id="seller-reg-fields" class="hidden grid grid-cols-2 gap-3 p-3 rounded-xl bg-indigo-50/70 border border-indigo-100">
+              <div>
+                <label class="block text-xs font-semibold text-indigo-900 mb-1">Store / Brand Name *</label>
+                <input type="text" id="auth-store-name" placeholder="Kala Kendra Jaipur" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-sm outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-indigo-900 mb-1">GSTIN (15-Digit)</label>
+                <input type="text" id="auth-gstin" placeholder="27AABCU9603R1ZM" maxlength="15" class="w-full px-3 py-2 rounded-xl border border-indigo-200 bg-white text-sm uppercase outline-none" />
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-indigo-600 text-white font-bold text-sm transition">
+              Continue to Marketplace
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 2: FULL PRODUCT DETAIL MODAL (ZOOM, VARIANTS, REVIEWS, Q&A)
+  ====================================================================== -->
+  <div id="product-detail-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeModal('product-detail-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-6">
+      <div id="product-detail-body" class="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+        <!-- Populated dynamically via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 3: SELLER STUDIO & ORDER MANAGEMENT (MULTI-VENDOR)
+  ====================================================================== -->
+  <div id="seller-studio-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeModal('seller-studio-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-6">
+      <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+        
+        <!-- Studio Header -->
+        <div class="px-6 py-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center">
+              <i data-lucide="store" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="font-display font-bold text-lg">Seller Central Studio</h2>
+                <span id="studio-store-badge" class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold">UrbanCraft Studio</span>
+              </div>
+              <p class="text-xs text-slate-400">Upload products with variants & HSN codes, track payouts, and fulfill customer orders.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="switchSellerTab('upload')" id="stab-upload" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold transition">+ Upload Product</button>
+            <button onclick="switchSellerTab('inventory')" id="stab-inventory" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition">My Listings</button>
+            <button onclick="switchSellerTab('orders')" id="stab-orders" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition">Vendor Orders</button>
+            <button onclick="closeModal('seller-studio-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+          </div>
+        </div>
+
+        <!-- Vendor Financial Summary Strip -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200">
+          <div class="bg-white p-3 rounded-xl border border-slate-200/80">
+            <span class="text-[11px] font-semibold text-slate-500">Gross Vendor Sales</span>
+            <p id="vendor-stat-gross" class="font-display font-extrabold text-lg text-slate-900">₹0</p>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200/80">
+            <span class="text-[11px] font-semibold text-slate-500">Platform Commission (<span id="vendor-comm-pct">10</span>%)</span>
+            <p id="vendor-stat-comm" class="font-display font-extrabold text-lg text-rose-600">-₹0</p>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200/80">
+            <span class="text-[11px] font-semibold text-slate-500">Net Seller Payout</span>
+            <p id="vendor-stat-net" class="font-display font-extrabold text-lg text-emerald-600">₹0</p>
+          </div>
+          <div class="bg-white p-3 rounded-xl border border-slate-200/80">
+            <span class="text-[11px] font-semibold text-slate-500">Active / Pending SKUs</span>
+            <p id="vendor-stat-skus" class="font-display font-extrabold text-lg text-indigo-600">0 / 0</p>
+          </div>
+        </div>
+
+        <!-- TAB A: UPLOAD NEW PRODUCT FORM + LIVE PREVIEW -->
+        <div id="seller-tab-upload" class="p-6">
+          <form id="seller-upload-form" onsubmit="handleSellerProductUpload(event)" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 space-y-3.5">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Product Title *</label>
+                <input type="text" id="up-title" required placeholder="e.g., Handloom Organic Cotton Kurta Set" oninput="updateUploadPreview()" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Selling Price (₹) *</label>
+                  <input type="number" id="up-price" required min="1" placeholder="1899" oninput="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">MRP (₹)</label>
+                  <input type="number" id="up-mrp" min="1" placeholder="2999" oninput="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Stock Qty *</label>
+                  <input type="number" id="up-stock" required min="1" value="15" oninput="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Category *</label>
+                  <select id="up-category" onchange="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white outline-none">
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Home & Living">Home & Living</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Art & Craft">Art & Craft</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">HSN Code *</label>
+                  <input type="text" id="up-hsn" required value="6204" maxlength="8" oninput="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-mono outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">2026 GST Slab</label>
+                  <div id="up-gst-indicator" class="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                    5% GST (Auto)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Variants Configuration -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Sizes (comma separated)</label>
+                  <input type="text" id="up-sizes" value="S, M, L, XL" placeholder="S, M, L, XL or Standard" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs outline-none" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Colors (comma separated)</label>
+                  <input type="text" id="up-colors" value="Obsidian Black, Ivory Sand, Royal Indigo" placeholder="Black, Navy, Olive" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs outline-none" />
+                </div>
+              </div>
+
+              <!-- Multi-Image Upload -->
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="text-xs font-bold text-slate-700 uppercase">Product Photos (Multi-Angle)</label>
+                  <label class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold cursor-pointer hover:bg-indigo-700 transition">
+                    + Upload Files
+                    <input type="file" accept="image/*" multiple onchange="handleMultiImageUpload(event)" class="hidden" />
+                  </label>
+                </div>
+                <input type="url" id="up-image-url" placeholder="Or paste primary image URL (https://...)" oninput="updateUploadPreview()" class="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs outline-none" />
+                <div id="uploaded-thumbs-strip" class="flex items-center gap-2 overflow-x-auto pt-1">
+                  <!-- Uploaded thumbnails appear here -->
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Description *</label>
+                <textarea id="up-desc" rows="2" required placeholder="Highlight fabric/build quality, warranty, dimensions, and care instructions..." oninput="updateUploadPreview()" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none resize-none"></textarea>
+              </div>
+            </div>
+
+            <!-- Live Storefront Preview -->
+            <div class="lg:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-bold uppercase text-slate-500">Live Marketplace Preview</span>
+                  <span id="up-approval-note" class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">Requires Admin Approval</span>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                  <div class="aspect-[4/3] bg-slate-100 relative">
+                    <img id="up-preview-img" src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover" alt="Preview" />
+                    <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full bg-slate-900/85 text-white text-[10px] font-bold" id="up-preview-cat">Electronics</span>
+                  </div>
+                  <div class="p-4">
+                    <p class="text-[11px] font-semibold text-indigo-600" id="up-preview-vendor">Sold by UrbanCraft Studio</p>
+                    <h4 class="font-display font-bold text-slate-900 text-sm truncate mt-0.5" id="up-preview-title">Your Product Title</h4>
+                    <p class="text-xs text-slate-500 line-clamp-2 mt-1" id="up-preview-desc">Product highlights will appear here.</p>
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                      <div>
+                        <span class="font-display font-extrabold text-base text-slate-900" id="up-preview-price">₹1,899</span>
+                        <span class="text-xs text-slate-400 line-through ml-1" id="up-preview-mrp">₹2,999</span>
+                      </div>
+                      <span class="text-[11px] font-bold text-emerald-600" id="up-preview-stock">15 in stock</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="mt-4 w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span id="up-submit-text">Submit Listing for Approval</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB B: VENDOR INVENTORY & LOW STOCK -->
+        <div id="seller-tab-inventory" class="hidden p-6 space-y-3 max-h-[420px] overflow-y-auto">
+          <!-- Populated via JS -->
+        </div>
+
+        <!-- TAB C: VENDOR ORDER MANAGEMENT SYSTEM (OMS) -->
+        <div id="seller-tab-orders" class="hidden p-6 space-y-3 max-h-[420px] overflow-y-auto">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 4: SUPER ADMIN GOVERNANCE, APPROVALS & ANALYTICS
+  ====================================================================== -->
+  <div id="admin-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/75 backdrop-blur-xs" onclick="closeModal('admin-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-3 sm:p-6">
+      <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+        
+        <div class="px-6 py-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h2 class="font-display font-bold text-lg">Super Admin Command Center</h2>
+              <p class="text-xs text-slate-300">Approve seller products, configure platform commission %, monitor GMV & low-stock alerts.</p>
+            </div>
+          </div>
+          <button onclick="closeModal('admin-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          
+          <!-- Platform KPIs & Commission Control -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 rounded-2xl bg-slate-900 text-white">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">Total Marketplace GMV</span>
+              <p id="admin-stat-gmv" class="font-display text-2xl font-extrabold text-amber-400 mt-1">₹0</p>
+              <span id="admin-stat-orders" class="text-[11px] text-slate-400">0 total orders</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+              <span class="text-[11px] font-bold text-emerald-700 uppercase">Platform Commission Earned</span>
+              <p id="admin-stat-commission" class="font-display text-2xl font-extrabold text-emerald-800 mt-1">₹0</p>
+              <span class="text-[11px] text-emerald-600">Net platform revenue</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+              <span class="text-[11px] font-bold text-amber-800 uppercase">Pending Approvals</span>
+              <p id="admin-stat-pending" class="font-display text-2xl font-extrabold text-amber-900 mt-1">0</p>
+              <span class="text-[11px] text-amber-700">Awaiting moderation</span>
+            </div>
+            <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+              <label class="block text-[11px] font-bold text-indigo-800 uppercase">Commission Rate (%)</label>
+              <div class="flex items-center gap-2 mt-1.5">
+                <input type="number" id="admin-commission-input" min="0" max="50" value="10" class="w-20 px-2.5 py-1 rounded-lg border border-indigo-300 bg-white font-display font-extrabold text-base text-slate-900" />
+                <button onclick="updatePlatformCommission()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Two-Column Moderation & Low-Stock Alerts -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left: Seller Product Approval Queue -->
+            <div class="lg:col-span-7 space-y-3">
+              <h3 class="font-display font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i>
+                <span>Seller Listing Approval Queue</span>
+              </h3>
+              <div id="admin-approval-list" class="space-y-2.5">
+                <!-- Rendered via JS -->
+              </div>
+            </div>
+
+            <!-- Right: Low-Stock Alerts & Category Revenue Analytics -->
+            <div class="lg:col-span-5 space-y-5">
+              <div>
+                <h3 class="font-display font-bold text-slate-900 text-sm flex items-center gap-2 mb-2.5">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500"></i>
+                  <span>Low-Stock Inventory Alerts (&le; 5 units)</span>
+                </h3>
+                <div id="admin-lowstock-list" class="space-y-2">
+                  <!-- Rendered via JS -->
+                </div>
+              </div>
+
+              <!-- Visual Category Breakdown Chart -->
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                <h4 class="font-display font-bold text-slate-900 text-xs uppercase tracking-wider mb-3">Catalog Distribution by Category</h4>
+                <div id="admin-category-chart" class="space-y-2.5">
+                  <!-- Rendered via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- All Marketplace Orders OMS (Super Admin View) -->
+          <div>
+            <h3 class="font-display font-bold text-slate-900 text-sm mb-3 flex items-center gap-2">
+              <i data-lucide="truck" class="w-4 h-4 text-indigo-600"></i>
+              <span>Global Order Management System (All Vendors)</span>
+            </h3>
+            <div id="admin-orders-list" class="space-y-2.5">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 5: WISHLIST DRAWER / MODAL
+  ====================================================================== -->
+  <div id="wishlist-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs" onclick="closeModal('wishlist-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="heart" class="w-5 h-5 text-rose-400 fill-rose-400"></i>
+            <h2 class="font-display font-bold text-lg">Your Saved Wishlist</h2>
+          </div>
+          <button onclick="closeModal('wishlist-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="wishlist-body" class="p-6 space-y-3 max-h-[65vh] overflow-y-auto">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 6: BUYER ORDERS & LIVE SHIPMENT TRACKING + GST INVOICE
+  ====================================================================== -->
+  <div id="orders-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs" onclick="closeModal('orders-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="package-check" class="w-5 h-5 text-amber-400"></i>
+            <div>
+              <h2 class="font-display font-bold text-lg">My Orders & Live Tracking</h2>
+              <p class="text-xs text-slate-400">Track Shiprocket AWB shipments, cancel items, or download GST Tax Invoices.</p>
+            </div>
+          </div>
+          <button onclick="closeModal('orders-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="buyer-orders-list" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 7: AUTOMATED 2026 INDIAN GST TAX INVOICE (PRINTABLE)
+  ====================================================================== -->
+  <div id="invoice-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs" onclick="closeModal('invoice-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-6">
+        <div class="no-print px-6 py-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-600 uppercase">Tax Invoice Preview (2026 GST Rules)</span>
+          <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 transition">
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i> Print / Save PDF
+            </button>
+            <button onclick="closeModal('invoice-modal')" class="p-1.5 rounded-lg text-slate-500 hover:bg-slate-200"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+        <div id="invoice-print-area" class="p-6 sm:p-8 text-slate-800 text-xs">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 8: PIN CODE SHIPPING CALCULATOR MODAL
+  ====================================================================== -->
+  <div id="pin-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs" onclick="closeModal('pin-modal')"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display font-bold text-base text-slate-900">Choose Delivery Location</h3>
+          <button onclick="closeModal('pin-modal')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <p class="text-xs text-slate-500">Enter a 6-digit Indian PIN code to check Shiprocket delivery speed & shipping fees.</p>
+        <div class="flex gap-2">
+          <input type="text" id="pin-modal-input" maxlength="6" placeholder="e.g., 560001" class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-500" />
+          <button onclick="applyPinCodeFromModal()" class="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-xs">Apply</button>
+        </div>
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <button onclick="setDeliveryPin('400001'); closeModal('pin-modal');" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold">Mumbai 400001</button>
+          <button onclick="setDeliveryPin('560001'); closeModal('pin-modal');" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold">Bengaluru 560001</button>
+          <button onclick="setDeliveryPin('110001'); closeModal('pin-modal');" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold">New Delhi 110001</button>
+          <button onclick="setDeliveryPin('700001'); closeModal('pin-modal');" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[11px] font-semibold">Kolkata 700001</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       SLIDE-OVER DRAWER: CART, COUPONS, PIN SHIPPING & RAZORPAY CHECKOUT
+  ====================================================================== -->
+  <div id="cart-drawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs" onclick="toggleCartDrawer(false)"></div>
+    <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+      <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between h-full">
+        
+        <!-- Drawer Header -->
+        <div class="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i data-lucide="shopping-cart" class="w-5 h-5 text-amber-400"></i>
+            <h2 class="font-display font-bold text-base">Shopping Cart</h2>
+            <span id="drawer-cart-count" class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-xs font-extrabold">0</span>
+          </div>
+          <button onclick="toggleCartDrawer(false)" class="p-1.5 rounded-lg text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <!-- STEP 1: CART ITEMS + PROMO CODES + PIN CALCULATOR -->
+        <div id="cart-step-items" class="flex-1 overflow-y-auto p-5 space-y-4">
+          <!-- Cart Items List -->
+          <div id="cart-items-list" class="space-y-3"></div>
+
+          <!-- Promo Code Box -->
+          <div id="cart-promo-section" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <label class="block text-[11px] font-bold uppercase text-slate-600">Apply Promo Coupon</label>
+            <div class="flex gap-2">
+              <input type="text" id="coupon-input" placeholder="WELCOME10 / AURA500 / FREESHIP" class="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs uppercase font-mono outline-none focus:border-indigo-500" />
+              <button onclick="applyCouponCode()" class="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-indigo-600 text-white text-xs font-bold transition">Apply</button>
+            </div>
+            <div id="applied-coupon-pill" class="hidden flex items-center justify-between px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+              <span id="applied-coupon-text">Code applied</span>
+              <button onclick="removeCoupon()" class="text-rose-600 hover:underline text-[11px]">Remove</button>
+            </div>
+          </div>
+
+          <!-- PIN Code Shipping Estimator -->
+          <div id="cart-pin-section" class="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold uppercase text-indigo-900 flex items-center gap-1">
+                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Delivery & Shipping
+              </span>
+              <span id="cart-eta-badge" class="text-[11px] font-bold text-emerald-700">Est. 2 Days</span>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="cart-pin-input" maxlength="6" value="400001" class="w-28 px-2.5 py-1 rounded-lg border border-indigo-200 bg-white text-xs font-mono outline-none" />
+              <button onclick="setDeliveryPin(document.getElementById('cart-pin-input').value)" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-bold">Check</button>
+              <span id="cart-city-label" class="text-xs text-slate-600 self-center truncate">Mumbai (Metro)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: RAZORPAY-STYLE MULTI-MODE CHECKOUT -->
+        <div id="cart-step-checkout" class="hidden flex-1 overflow-y-auto p-5 space-y-4">
+          <button onclick="setCartStep('items')" class="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Back to Cart
+          </button>
+
+          <!-- Razorpay Branded Header -->
+          <div class="p-3.5 rounded-xl bg-[#0b193c] text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-sky-500 flex items-center justify-center font-extrabold text-sm">R</div>
+              <div>
+                <p class="text-xs font-bold">Razorpay Trusted Checkout</p>
+                <p class="text-[10px] text-sky-300">256-bit SSL Encrypted &bull; Instant GST Invoice</p>
+              </div>
+            </div>
+            <span id="rzp-header-amount" class="font-display font-extrabold text-base text-amber-400">₹0</span>
+          </div>
+
+          <form id="razorpay-checkout-form" onsubmit="processRazorpayOrder(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+              <input type="text" id="chk-name" required value="Aarav Sharma" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-500" />
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Mobile (+91) *</label>
+                <input type="tel" id="chk-phone" required value="9876543210" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Buyer GSTIN (Optional)</label>
+                <input type="text" id="chk-gstin" placeholder="For B2B Tax Credit" maxlength="15" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs uppercase outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Full Shipping Address *</label>
+              <textarea id="chk-address" rows="2" required class="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs outline-none resize-none">402 Sea Breeze Towers, Colaba, Mumbai 400001</textarea>
+            </div>
+
+            <!-- Payment Mode Tabs -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Select Payment Method</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="cursor-pointer">
+                  <input type="radio" name="pay-mode" value="UPI (GPay / PhonePe)" checked class="peer hidden" />
+                  <div class="p-2.5 rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 text-xs font-bold text-slate-700 peer-checked:text-indigo-700 flex items-center gap-2">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i> UPI / QR
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="pay-mode" value="Credit / Debit Card" class="peer hidden" />
+                  <div class="p-2.5 rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 text-xs font-bold text-slate-700 peer-checked:text-indigo-700 flex items-center gap-2">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i> Cards
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="pay-mode" value="Net Banking" class="peer hidden" />
+                  <div class="p-2.5 rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 text-xs font-bold text-slate-700 peer-checked:text-indigo-700 flex items-center gap-2">
+                    <i data-lucide="landmark" class="w-4 h-4"></i> Net Banking
+                  </div>
+                </label>
+                <label class="cursor-pointer">
+                  <input type="radio" name="pay-mode" value="Cash on Delivery (COD)" class="peer hidden" />
+                  <div class="p-2.5 rounded-xl border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 text-xs font-bold text-slate-700 peer-checked:text-indigo-700 flex items-center gap-2">
+                    <i data-lucide="banknote" class="w-4 h-4"></i> Cash on Delivery
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" id="rzp-pay-btn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg transition flex items-center justify-center gap-2">
+              <i data-lucide="lock" class="w-4 h-4"></i>
+              <span>Pay & Confirm Order</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- STEP 3: ORDER SUCCESS + INSTANT GST INVOICE DOWNLOAD -->
+        <div id="cart-step-success" class="hidden flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center text-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
+            <i data-lucide="check-circle-2" class="w-10 h-10"></i>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">Payment Successful</span>
+          <h3 class="font-display text-xl font-extrabold text-slate-900 mt-2">Order Placed & Confirmed!</h3>
+          <p class="text-xs text-slate-500 mt-1 max-w-xs">
+            Shiprocket AWB tracking generated and vendor payout ledger updated.
+          </p>
+          <div id="last-order-summary" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 mt-4 text-left text-xs space-y-1.5">
+            <!-- Populated via JS -->
+          </div>
+          <div class="w-full grid grid-cols-2 gap-2.5 mt-5">
+            <button id="view-last-invoice-btn" class="py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="file-text" class="w-4 h-4"></i> GST Tax Invoice
+            </button>
+            <button onclick="toggleCartDrawer(false); openOrdersModal();" class="py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
+              Track Order
+            </button>
+          </div>
+        </div>
+
+        <!-- Cart Totals Footer -->
+        <div id="cart-footer" class="p-5 bg-slate-50 border-t border-slate-200 space-y-2.5">
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between text-slate-600">
+              <span>Subtotal</span>
+              <span id="sum-subtotal" class="font-semibold">₹0</span>
+            </div>
+            <div id="sum-discount-row" class="hidden flex justify-between text-emerald-600 font-semibold">
+              <span>Coupon Discount</span>
+              <span id="sum-discount">-₹0</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>2026 GST (5% / 18% Slab)</span>
+              <span id="sum-gst" class="font-semibold">₹0</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>Shipping (<span id="sum-zone-label">Metro</span>)</span>
+              <span id="sum-shipping" class="font-semibold text-emerald-600">FREE</span>
+            </div>
+            <div class="flex justify-between text-base font-extrabold text-slate-900 pt-2 border-t border-slate-200">
+              <span>Grand Total</span>
+              <span id="sum-total">₹0</span>
+            </div>
+          </div>
+          <button id="proceed-to-pay-btn" onclick="setCartStep('checkout')" class="w-full py-3.5 rounded-xl bg-amber-400 hover:bg-amber-500 disabled:bg-slate-200 disabled:text-slate-400 text-slate-950 font-extrabold text-sm shadow-md transition">
+            Proceed to Razorpay Checkout &rarr;
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       JAVASCRIPT: MULTI-VENDOR ENGINE, 2026 GST, OMS & ANALYTICS
+  ====================================================================== -->
+  <script>
+    // --- 1. SEED DATA: VERIFIED VENDORS & MULTI-VARIANT PRODUCTS ---
+    const INITIAL_VENDORS = [
+      { id: 'v-urbancraft', name: 'UrbanCraft Studio', gstin: '27AABCU9603R1ZM', city: 'Mumbai, MH', rating: 4.9, badge: 'Top Artisan' },
+      { id: 'v-techpulse', name: 'TechPulse India', gstin: '29AABCT4512K1Z5', city: 'Bengaluru, KA', rating: 4.8, badge: 'Flagship Tech' },
+      { id: 'v-vastra', name: 'Vastra Looms Jaipur', gstin: '08AABCV8821P1Z9', city: 'Jaipur, RJ', rating: 4.9, badge: 'Handloom Verified' },
+      { id: 'v-kinetix', name: 'Kinetix Athletics', gstin: '07AABCK3319M1Z2', city: 'New Delhi, DL', rating: 4.7, badge: 'Official Brand' }
+    ];
+
+    const INITIAL_PRODUCTS = [
+      {
+        id: 'p-101',
+        slug: 'aura-pro-anc-studio-headphones',
+        title: 'AURA Pro Hybrid ANC Wireless Headphones',
+        price: 7999,
+        mrp: 11999,
+        category: 'Electronics',
+        hsn: '8518',
+        stock: 14,
+        vendorId: 'v-techpulse',
+        vendorName: 'TechPulse India',
+        vendorGstin: '29AABCT4512K1Z5',
+        status: 'approved',
+        isFlashDeal: true,
+        rating: 4.9,
+        sizes: ['Standard'],
+        colors: ['Obsidian Black', 'Titanium Silver', 'Midnight Blue'],
+        images: [
+          'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: '45dB Hybrid Active Noise Cancellation, 50-hour battery life, multipoint Bluetooth 5.3, and plush protein-leather earcups engineered for studio clarity.',
+        reviews: [
+          { user: 'Rohan Mehta', rating: 5, comment: 'Noise cancellation easily rivals ₹25k headphones. Battery lasted an entire week of flights!', date: '12 Nov 2026' },
+          { user: 'Ananya Verma', rating: 5, comment: 'Super comfortable for long coding sessions and crisp mic quality.', date: '08 Nov 2026' }
+        ],
+        qa: [
+          { q: 'Does it support wired USB-C audio mode?', a: 'Yes, both 3.5mm AUX and USB-C lossless audio cables are included in the box.', by: 'TechPulse India' }
+        ]
+      },
+      {
+        id: 'p-102',
+        slug: 'jaipur-handloom-linen-kurta-set',
+        title: 'Jaipur Handloom Pure Linen Festive Kurta',
+        price: 1899,
+        mrp: 3299,
+        category: 'Fashion',
+        hsn: '6204',
+        stock: 22,
+        vendorId: 'v-vastra',
+        vendorName: 'Vastra Looms Jaipur',
+        vendorGstin: '08AABCV8821P1Z9',
+        status: 'approved',
+        isFlashDeal: true,
+        rating: 4.8,
+        sizes: ['S', 'M', 'L', 'XL'],
+        colors: ['Ivory Sand', 'Terracotta Rust', 'Sage Olive'],
+        images: [
+          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1617137968427-85924c800a22?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'Breathable 100% pure flax linen tailored by master artisans in Jaipur. Qualifies for the 2026 5% GST slab on apparel up to ₹2,500.',
+        reviews: [
+          { user: 'Vikramaditya S.', rating: 5, comment: 'Rich fabric texture and zero shrinkage after wash. Fits true to size.', date: '10 Nov 2026' }
+        ],
+        qa: [
+          { q: 'Is the fabric pre-washed?', a: 'Yes, all our linen garments are enzyme pre-washed for softness.', by: 'Vastra Looms Jaipur' }
+        ]
+      },
+      {
+        id: 'p-103',
+        slug: 'aerostride-carbon-running-shoes',
+        title: 'AeroStride Carbon-Plate Marathon Running Shoes',
+        price: 2399,
+        mrp: 4499,
+        category: 'Fashion',
+        hsn: '6404',
+        stock: 4, // Low stock trigger!
+        vendorId: 'v-kinetix',
+        vendorName: 'Kinetix Athletics',
+        vendorGstin: '07AABCK3319M1Z2',
+        status: 'approved',
+        isFlashDeal: true,
+        rating: 4.7,
+        sizes: ['UK 7', 'UK 8', 'UK 9', 'UK 10'],
+        colors: ['Solar Crimson', 'Volt Neon', 'Stealth Black'],
+        images: [
+          'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'Ultra-lightweight engineered mesh runner with nitrogen-infused midsole foam. Priced under ₹2,500 for 5% GST savings.',
+        reviews: [
+          { user: 'Kabir Das', rating: 5, comment: 'Unbelievable energy return for daily 10K runs.', date: '04 Nov 2026' }
+        ],
+        qa: []
+      },
+      {
+        id: 'p-104',
+        slug: 'chronos-sapphire-automatic-watch',
+        title: 'Chronos 316L Steel Minimalist Watch',
+        price: 4499,
+        mrp: 6999,
+        category: 'Accessories',
+        hsn: '9102',
+        stock: 9,
+        vendorId: 'v-urbancraft',
+        vendorName: 'UrbanCraft Studio',
+        vendorGstin: '27AABCU9603R1ZM',
+        status: 'approved',
+        isFlashDeal: false,
+        rating: 4.9,
+        sizes: ['40mm Dial', '42mm Dial'],
+        colors: ['Brushed Silver', 'Matte Slate', 'Saddle Tan Strap'],
+        images: [
+          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'Scratch-resistant sapphire crystal glass, surgical-grade 316L stainless steel case, and 5ATM water resistance.',
+        reviews: [
+          { user: 'Neha Kulkarni', rating: 5, comment: 'Gifted this to my brother—looks like a luxury Swiss timepiece.', date: '01 Nov 2026' }
+        ],
+        qa: []
+      },
+      {
+        id: 'p-105',
+        slug: 'handcrafted-stoneware-coffee-dripper',
+        title: 'Artisanal Stoneware Pour-Over Coffee Set',
+        price: 1499,
+        mrp: 2299,
+        category: 'Home & Living',
+        hsn: '6912',
+        stock: 18,
+        vendorId: 'v-urbancraft',
+        vendorName: 'UrbanCraft Studio',
+        vendorGstin: '27AABCU9603R1ZM',
+        status: 'approved',
+        isFlashDeal: false,
+        rating: 4.9,
+        sizes: ['350ml Carafe + Mug'],
+        colors: ['Speckled Ivory', 'Matte Charcoal'],
+        images: [
+          'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=800&q=80',
+          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'Wheel-thrown ceramic coffee brewer with spiral extraction ribs and lead-free food-safe matte glaze.',
+        reviews: [],
+        qa: []
+      },
+      {
+        id: 'p-106',
+        slug: 'keyforge-75-mechanical-keyboard',
+        title: 'KeyForge 75% Hot-Swappable Mechanical Keyboard',
+        price: 6499,
+        mrp: 8999,
+        category: 'Electronics',
+        hsn: '8471',
+        stock: 3, // Low stock trigger!
+        vendorId: 'v-techpulse',
+        vendorName: 'TechPulse India',
+        vendorGstin: '29AABCT4512K1Z5',
+        status: 'approved',
+        isFlashDeal: true,
+        rating: 4.8,
+        sizes: ['Tactile Brown Switch', 'Linear Red Switch'],
+        colors: ['Space Grey', 'Retro Beige'],
+        images: [
+          'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'CNC aluminum frame, gasket-mounted acoustic dampening, PBT double-shot keycaps, and Mac/Windows instant toggle.',
+        reviews: [],
+        qa: []
+      },
+      {
+        id: 'p-107',
+        slug: 'full-grain-leather-laptop-tote',
+        title: 'Full-Grain Vegetable Tanned Leather Weekender Tote',
+        price: 5299,
+        mrp: 7999,
+        category: 'Accessories',
+        hsn: '4202',
+        stock: 11,
+        vendorId: 'v-urbancraft',
+        vendorName: 'UrbanCraft Studio',
+        vendorGstin: '27AABCU9603R1ZM',
+        status: 'approved',
+        isFlashDeal: false,
+        rating: 4.8,
+        sizes: ['Fits 16" Laptop'],
+        colors: ['Cognac Tan', 'Espresso Brown'],
+        images: [
+          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: 'Hand-stitched full-grain buffalo leather tote with padded 16-inch MacBook compartment and solid antique brass hardware.',
+        reviews: [],
+        qa: []
+      },
+      {
+        id: 'p-108',
+        slug: 'terracotta-bauhaus-framed-canvas',
+        title: 'Bauhaus Terracotta Archival Framed Canvas Art',
+        price: 2199,
+        mrp: 3499,
+        category: 'Art & Craft',
+        hsn: '9701',
+        stock: 8,
+        vendorId: 'v-vastra',
+        vendorName: 'Vastra Looms Jaipur',
+        vendorGstin: '08AABCV8821P1Z9',
+        status: 'pending', // Pending admin approval demo item!
+        isFlashDeal: false,
+        rating: 5.0,
+        sizes: ['18x24 Inches', '24x36 Inches'],
+        colors: ['Natural Teak Frame', 'Matte Black Frame'],
+        images: [
+          'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=800&q=80'
+        ],
+        description: '320gsm museum-grade textured cotton canvas print mounted in a seasoned teakwood floating frame.',
+        reviews: [],
+        qa: []
+      }
+    ];
+
+    const CATEGORIES = ['All', 'Electronics', 'Fashion', 'Home & Living', 'Accessories', 'Art & Craft'];
+
+    // --- 2. GLOBAL APPLICATION STATE ---
+    let state = {
+      currentUser: {
+        id: 'u-buyer-1',
+        name: 'Aarav Sharma',
+        role: 'buyer', // 'buyer' | 'seller' | 'admin'
+        vendorId: null,
+        storeName: null
+      },
+      commissionRate: 10, // Platform commission %
+      vendors: [],
+      products: [],
+      cart: [],
+      wishlist: [],
+      orders: [],
+      selectedCategory: 'All',
+      selectedVendorFilter: null,
+      flashOnly: false,
+      searchQuery: '',
+      sortBy: 'featured',
+      appliedCoupon: null,
+      deliveryPin: { code: '400001', city: 'Mumbai', state: 'Maharashtra', zone: 'Metro', fee: 0, days: 2 },
+      tempUploadedImages: [],
+      activeDetailSelection: { productId: null, size: '', color: '', imgIdx: 0 }
+    };
+
+    // --- 3. INITIALIZATION & STORAGE ---
+    function initMarketplace() {
+      try {
+        const saved = localStorage.getItem('aura_multivendor_v2');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed };
+        } else {
+          state.vendors = [...INITIAL_VENDORS];
+          state.products = [...INITIAL_PRODUCTS];
+          // Seed 1 sample order so Buyer Tracking, GST Invoice & Admin Analytics work immediately
+          state.orders = [
+            {
+              id: 'AUR-849201',
+              awb: 'SRK77492018IN',
+              date: '14 Nov 2026, 04:15 PM',
+              buyerName: 'Aarav Sharma',
+              buyerAddress: '402 Sea Breeze Towers, Colaba, Mumbai 400001',
+              buyerGstin: '',
+              paymentMode: 'UPI (GPay / PhonePe)',
+              status: 'Shipped',
+              shippingFee: 0,
+              discount: 0,
+              items: [
+                {
+                  productId: 'p-102',
+                  title: 'Jaipur Handloom Pure Linen Festive Kurta',
+                  vendorId: 'v-vastra',
+                  vendorName: 'Vastra Looms Jaipur',
+                  vendorGstin: '08AABCV8821P1Z9',
+                  hsn: '6204',
+                  size: 'L',
+                  color: 'Ivory Sand',
+                  qty: 1,
+                  price: 1899,
+                  gstRate: 5,
+                  gstAmount: 95
+                }
+              ],
+              subtotal: 1899,
+              gstTotal: 95,
+              grandTotal: 1994
+            }
+          ];
+          saveState();
+        }
+      } catch (e) {
+        console.error('State load error:', e);
+        state.vendors = [...INITIAL_VENDORS];
+        state.products = [...INITIAL_PRODUCTS];
+      }
+
+      // Bind search inputs
+      const dSearch = document.getElementById('desktop-search');
+      const mSearch = document.getElementById('mobile-search');
+      dSearch.addEventListener('input', (e) => { mSearch.value = e.target.value; handleSearch(e.target.value); });
+      mSearch.addEventListener('input', (e) => { dSearch.value = e.target.value; handleSearch(e.target.value); });
+
+      startFlashSaleCountdown();
+      updateRoleHeaderUI();
+      renderFeaturedVendors();
+      renderCategories();
+      renderProducts();
+      updateCartUI();
+      updateWishlistBadge();
+      updateAdminBadges();
+      lucide.createIcons();
+
+      // Trigger abandoned cart simulation if cart has items after 8 seconds
+      if (state.cart.length > 0) {
+        setTimeout(() => {
+          document.getElementById('abandoned-cart-banner').classList.remove('hidden');
+        }, 6000);
+      }
+    }
+
+    function saveState() {
+      try {
+        const toSave = {
+          currentUser: state.currentUser,
+          commissionRate: state.commissionRate,
+          vendors: state.vendors,
+          products: state.products,
+          cart: state.cart,
+          wishlist: state.wishlist,
+          orders: state.orders,
+          deliveryPin: state.deliveryPin
+        };
+        localStorage.setItem('aura_multivendor_v2', JSON.stringify(toSave));
+      } catch (e) {
+        showToast('Browser storage limit reached. Try smaller images.', 'error');
+      }
+    }
+
+    function resetFullMarketplace() {
+      localStorage.removeItem('aura_multivendor_v2');
+      location.reload();
+    }
+
+    // --- 4. 2026 INDIAN GST ENGINE & FORMATTING ---
+    function calculate2026GstRate(product) {
+      // 2026 Indian GST Rule: Apparel & Footwear priced <= ₹2,500 attract 5% GST; > ₹2,500 or Electronics/Accessories attract 18% GST
+      if ((product.category === 'Fashion') && Number(product.price) <= 2500) {
+        return 5;
+      }
+      return 18;
+    }
+
+    function formatINR(num) {
+      return '₹' + Math.round(Number(num)).toLocaleString('en-IN');
+    }
+
+    // --- 5. ROLE-BASED AUTHENTICATION & SWITCHING ---
+    function switchDemoRole(roleKey) {
+      if (roleKey === 'buyer') {
+        state.currentUser = { id: 'u-buyer-1', name: 'Aarav Sharma', role: 'buyer', vendorId: null, storeName: null };
+      } else if (roleKey === 'seller1') {
+        state.currentUser = { id: 'u-seller-1', name: 'Riya Kapoor', role: 'seller', vendorId: 'v-urbancraft', storeName: 'UrbanCraft Studio' };
+      } else if (roleKey === 'admin') {
+        state.currentUser = { id: 'u-admin-1', name: 'Platform Owner (You)', role: 'admin', vendorId: 'v-urbancraft', storeName: 'AURA Official Store' };
+      }
+      saveState();
+      updateRoleHeaderUI();
+      showToast(`Switched active role to ${state.currentUser.role.toUpperCase()}: ${state.currentUser.name}`, 'info');
+    }
+
+    function toggleSellerRegFields(role) {
+      const box = document.getElementById('seller-reg-fields');
+      if (role === 'seller') {
+        box.classList.remove('hidden');
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function handleCustomAccountRegister(e) {
+      e.preventDefault();
+      const role = document.getElementById('auth-role-select').value;
+      const name = document.getElementById('auth-name').value.trim();
+      const storeName = document.getElementById('auth-store-name').value.trim() || `${name}'s Store`;
+      const gstin = document.getElementById('auth-gstin').value.trim().toUpperCase() || '27AABCA1234F1Z5';
+
+      if (role === 'seller') {
+        const newVendorId = 'v-' + Date.now();
+        state.vendors.push({
+          id: newVendorId,
+          name: storeName,
+          gstin,
+          city: 'India',
+          rating: 5.0,
+          badge: 'New Seller'
+        });
+        state.currentUser = { id: 'u-' + Date.now(), name, role: 'seller', vendorId: newVendorId, storeName };
+        renderFeaturedVendors();
+      } else {
+        state.currentUser = { id: 'u-' + Date.now(), name, role: 'buyer', vendorId: null, storeName: null };
+      }
+
+      saveState();
+      updateRoleHeaderUI();
+      closeModal('auth-modal');
+      showToast(`Welcome, ${name}! Logged in as ${role.toUpperCase()}.`, 'success');
+    }
+
+    function updateRoleHeaderUI() {
+      const u = state.currentUser;
+      document.getElementById('header-account-name').textContent = u.storeName || u.name;
+      document.getElementById('header-user-short').textContent = u.name.split(' ')[0];
+      const pill = document.getElementById('header-role-pill');
+      const avatar = document.getElementById('role-avatar-badge');
+      const dashBtn = document.getElementById('role-dashboard-btn');
+      const dashLabel = document.getElementById('role-dashboard-label');
+
+      if (u.role === 'admin') {
+        pill.textContent = 'Super Admin';
+        pill.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-amber-400 text-slate-950';
+        avatar.textContent = 'A';
+        avatar.className = 'w-7 h-7 rounded-lg bg-amber-400 text-slate-950 font-extrabold text-xs flex items-center justify-center shrink-0';
+        dashBtn.classList.remove('hidden');
+        dashLabel.textContent = 'Admin Panel';
+      } else if (u.role === 'seller') {
+        pill.textContent = 'Verified Seller';
+        pill.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-200';
+        avatar.textContent = 'S';
+        avatar.className = 'w-7 h-7 rounded-lg bg-indigo-500 text-white font-extrabold text-xs flex items-center justify-center shrink-0';
+        dashBtn.classList.remove('hidden');
+        dashLabel.textContent = 'Seller Studio';
+      } else {
+        pill.textContent = 'Buyer';
+        pill.className = 'text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300';
+        avatar.textContent = u.name.charAt(0).toUpperCase();
+        avatar.className = 'w-7 h-7 rounded-lg bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0';
+        dashBtn.classList.remove('hidden');
+        dashLabel.textContent = 'My Orders';
+      }
+
+      document.getElementById('nav-orders-count').textContent = state.orders.length;
+      document.getElementById('top-commission-rate').textContent = state.commissionRate;
+    }
+
+    function openRoleWorkspace() {
+      if (state.currentUser.role === 'admin') {
+        openAdminPanel();
+      } else if (state.currentUser.role === 'seller') {
+        openSellerStudio();
+      } else {
+        openOrdersModal();
+      }
+    }
+
+    // --- 6. STOREFRONT RENDERING, FILTERING & VENDOR SHOPS ---
+    function renderFeaturedVendors() {
+      const container = document.getElementById('featured-vendors-list');
+      document.getElementById('active-vendors-count').textContent = `${state.vendors.length} Active Stores`;
+      container.innerHTML = state.vendors.slice(0, 4).map(v => `
+        <button onclick="filterByVendor('${v.id}')" class="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-left transition">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-amber-300">${v.badge}</span>
+            <span class="text-[10px] text-slate-300 flex items-center gap-0.5">★ ${v.rating}</span>
+          </div>
+          <p class="font-bold text-xs text-white truncate mt-1">${escapeHtml(v.name)}</p>
+          <p class="text-[10px] text-slate-400 truncate">${escapeHtml(v.city)}</p>
+        </button>
+      `).join('');
+    }
+
+    function filterByVendor(vendorId) {
+      const vendor = state.vendors.find(v => v.id === vendorId);
+      if (!vendor) return;
+      state.selectedVendorFilter = vendorId;
+      document.getElementById('vendor-filter-banner').classList.remove('hidden');
+      document.getElementById('vendor-banner-name').textContent = `${vendor.name} (${vendor.city})`;
+      renderProducts();
+      document.getElementById('marketplace-catalog').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function clearVendorFilter() {
+      state.selectedVendorFilter = null;
+      document.getElementById('vendor-filter-banner').classList.add('hidden');
+      renderProducts();
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('category-pills');
+      container.innerHTML = CATEGORIES.map(cat => {
+        const active = state.selectedCategory === cat;
+        return `
+          <button onclick="selectCategory('${cat}')" class="px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+            active ? 'bg-slate-900 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-200/70 border border-slate-200'
+          }">
+            ${cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(cat) {
+      state.selectedCategory = cat;
+      document.getElementById('header-category-select').value = cat;
+      renderCategories();
+      renderProducts();
+    }
+
+    function handleSearch(q) {
+      state.searchQuery = q.trim().toLowerCase();
+      document.getElementById('clear-search-btn').classList.toggle('hidden', !state.searchQuery);
+      renderProducts();
+    }
+
+    function clearSearch() {
+      document.getElementById('desktop-search').value = '';
+      document.getElementById('mobile-search').value = '';
+      handleSearch('');
+    }
+
+    function toggleFlashOnly() {
+      state.flashOnly = !state.flashOnly;
+      const btn = document.getElementById('flash-filter-btn');
+      btn.classList.toggle('ring-2', state.flashOnly);
+      btn.classList.toggle('ring-amber-500', state.flashOnly);
+      renderProducts();
+    }
+
+    function filterFlashDeals() {
+      state.flashOnly = true;
+      document.getElementById('flash-filter-btn').classList.add('ring-2', 'ring-amber-500');
+      renderProducts();
+      document.getElementById('marketplace-catalog').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function handleSortChange(val) {
+      state.sortBy = val;
+      renderProducts();
+    }
+
+    function resetAllFilters() {
+      state.selectedCategory = 'All';
+      state.selectedVendorFilter = null;
+      state.flashOnly = false;
+      state.sortBy = 'featured';
+      document.getElementById('vendor-filter-banner').classList.add('hidden');
+      document.getElementById('flash-filter-btn').classList.remove('ring-2', 'ring-amber-500');
+      document.getElementById('sort-select').value = 'featured';
+      document.getElementById('header-category-select').value = 'All';
+      clearSearch();
+      renderCategories();
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const empty = document.getElementById('empty-state');
+
+      // Only show approved products in public marketplace
+      let list = state.products.filter(p => p.status === 'approved');
+
+      if (state.selectedVendorFilter) {
+        list = list.filter(p => p.vendorId === state.selectedVendorFilter);
+      }
+      if (state.selectedCategory !== 'All') {
+        list = list.filter(p => p.category === state.selectedCategory);
+      }
+      if (state.flashOnly) {
+        list = list.filter(p => p.isFlashDeal);
+      }
+      if (state.searchQuery) {
+        list = list.filter(p =>
+          p.title.toLowerCase().includes(state.searchQuery) ||
+          p.vendorName.toLowerCase().includes(state.searchQuery) ||
+          p.category.toLowerCase().includes(state.searchQuery) ||
+          p.hsn.includes(state.searchQuery)
+        );
+      }
+
+      if (state.sortBy === 'price-asc') list.sort((a, b) => a.price - b.price);
+      else if (state.sortBy === 'price-desc') list.sort((a, b) => b.price - a.price);
+      else if (state.sortBy === 'rating') list.sort((a, b) => b.rating - a.rating);
+      else if (state.sortBy === 'newest') list.reverse();
+
+      document.getElementById('results-count').textContent = `${list.length} products`;
+
+      if (list.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        lucide.createIcons();
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      grid.innerHTML = list.map(p => {
+        const discountPct = p.mrp > p.price ? Math.round(((p.mrp - p.price) / p.mrp) * 100) : 0;
+        const isWishlisted = state.wishlist.includes(p.id);
+        const gstSlab = calculate2026GstRate(p);
+        const outOfStock = p.stock <= 0;
+
+        return `
+          <div class="animate-card group bg-white rounded-2xl border border-slate-200/90 hover:border-indigo-400 shadow-2xs hover:shadow-xl transition-all flex flex-col overflow-hidden">
+            <div class="relative aspect-[4/3] bg-slate-100 overflow-hidden cursor-pointer" onclick="openProductDetail('${p.id}')">
+              <img 
+                src="${p.images[0]}" 
+                alt="${escapeHtml(p.title)}" 
+                onerror="this.src='https://placehold.co/600x450/eef2ff/4f46e5?text=AURA+Product'"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${outOfStock ? 'grayscale opacity-60' : ''}"
+              />
+              
+              <!-- Badges -->
+              <div class="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                ${p.isFlashDeal ? `<span class="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase shadow-xs flex items-center gap-1"><i data-lucide="zap" class="w-2.5 h-2.5 fill-slate-950"></i> Flash Deal</span>` : ''}
+                ${discountPct > 0 ? `<span class="px-2 py-0.5 rounded-md bg-rose-600 text-white text-[10px] font-bold w-fit">${discountPct}% OFF</span>` : ''}
+              </div>
+
+              <!-- Wishlist Heart Button -->
+              <button 
+                onclick="event.stopPropagation(); toggleWishlist('${p.id}')"
+                class="absolute top-2.5 right-2.5 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm transition ${isWishlisted ? 'text-rose-600' : 'text-slate-400 hover:text-rose-500'}"
+                title="Save to Wishlist"
+              >
+                <i data-lucide="heart" class="w-4 h-4 ${isWishlisted ? 'fill-rose-600' : ''}"></i>
+              </button>
+
+              <!-- Variant Indicator -->
+              ${(p.colors && p.colors.length > 1) ? `
+                <span class="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-slate-900/80 text-white text-[10px] font-semibold backdrop-blur-xs">
+                  ${p.colors.length} Colors &bull; ${p.sizes.length} Sizes
+                </span>
+              ` : ''}
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col justify-between">
+              <div>
+                <!-- Clickable Vendor Link -->
+                <div class="flex items-center justify-between gap-1 text-[11px] mb-1">
+                  <button onclick="filterByVendor('${p.vendorId}')" class="font-semibold text-indigo-600 hover:underline truncate flex items-center gap-1">
+                    <i data-lucide="badge-check" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                    <span class="truncate">${escapeHtml(p.vendorName)}</span>
+                  </button>
+                  <span class="flex items-center gap-0.5 font-bold text-slate-700 shrink-0">
+                    <i data-lucide="star" class="w-3 h-3 fill-amber-400 text-amber-400"></i> ${p.rating}
+                  </span>
+                </div>
+
+                <h3 onclick="openProductDetail('${p.id}')" class="font-display font-bold text-slate-900 text-sm leading-snug line-clamp-2 hover:text-indigo-600 cursor-pointer">
+                  ${escapeHtml(p.title)}
+                </h3>
+
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="font-display font-extrabold text-lg text-slate-900">${formatINR(p.price)}</span>
+                  ${p.mrp > p.price ? `<span class="text-xs text-slate-400 line-through">${formatINR(p.mrp)}</span>` : ''}
+                </div>
+                <p class="text-[10px] text-slate-500 mt-0.5">
+                  +${gstSlab}% GST (HSN ${p.hsn}) &bull; Free Delivery to ${state.deliveryPin.city}
+                </p>
+              </div>
+
+              <div class="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-2">
+                <button 
+                  onclick="quickAddToCart('${p.id}')"
+                  ${outOfStock ? 'disabled' : ''}
+                  class="flex-1 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                    outOfStock ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-amber-400 hover:bg-amber-500 text-slate-950'
+                  }"
+                >
+                  <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                  <span>${outOfStock ? 'Sold Out' : 'Add to Cart'}</span>
+                </button>
+                <button onclick="openProductDetail('${p.id}')" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
+                  Details
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // --- 7. PRODUCT DETAIL MODAL (ZOOM, VARIANTS, REVIEWS, Q&A, RECOMMENDATIONS) ---
+    function openProductDetail(productId) {
+      const p = state.products.find(item => item.id === productId);
+      if (!p) return;
+
+      state.activeDetailSelection = {
+        productId: p.id,
+        size: p.sizes[0] || 'Standard',
+        color: p.colors[0] || 'Default',
+        imgIdx: 0
+      };
+
+      renderProductDetailBody(p);
+      document.getElementById('product-detail-modal').classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+      lucide.createIcons();
+    }
+
+    function renderProductDetailBody(p) {
+      const sel = state.activeDetailSelection;
+      const gstSlab = calculate2026GstRate(p);
+      const similar = state.products.filter(item => item.status === 'approved' && item.id !== p.id).slice(0, 3);
+      const seoUrl = `https://aura.in/product/${p.slug}`;
+
+      document.getElementById('product-detail-body').innerHTML = `
+        <button onclick="closeModal('product-detail-modal')" class="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/90 hover:bg-slate-100 text-slate-700 shadow-md">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="max-h-[88vh] overflow-y-auto">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 p-5 sm:p-8">
+            
+            <!-- Left: Multi-Angle Gallery + Interactive Hover-to-Zoom -->
+            <div class="lg:col-span-5 space-y-3">
+              <div 
+                class="zoom-container aspect-square rounded-2xl bg-slate-100 border border-slate-200 overflow-hidden"
+                onmousemove="handleImageZoom(event, this)"
+                onmouseleave="resetImageZoom(this)"
+              >
+                <img id="detail-main-img" src="${p.images[sel.imgIdx] || p.images[0]}" class="w-full h-full object-cover" alt="${escapeHtml(p.title)}" />
+                <span class="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-slate-900/75 text-white text-[10px] font-semibold pointer-events-none flex items-center gap-1">
+                  <i data-lucide="zoom-in" class="w-3 h-3"></i> Hover to Zoom
+                </span>
+              </div>
+
+              <!-- Thumbnail Switcher -->
+              <div class="flex items-center gap-2 overflow-x-auto">
+                ${p.images.map((img, idx) => `
+                  <button onclick="selectDetailImage(${idx})" class="w-16 h-16 rounded-xl overflow-hidden border-2 shrink-0 ${sel.imgIdx === idx ? 'border-indigo-600' : 'border-transparent opacity-70 hover:opacity-100'}">
+                    <img src="${img}" class="w-full h-full object-cover" alt="Angle ${idx + 1}" />
+                  </button>
+                `).join('')}
+              </div>
+
+              <!-- Clean SEO URL & WhatsApp Social Share -->
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+                <span class="text-[11px] font-mono text-slate-500 truncate">${seoUrl}</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button onclick="copySeoLink('${seoUrl}')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-[11px] font-bold text-slate-700">Copy Link</button>
+                  <button onclick="shareWhatsApp('${escapeHtml(p.title)}', ${p.price})" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold">WhatsApp</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Variants, Seller Info, Pricing & Purchase -->
+            <div class="lg:col-span-7 space-y-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <button onclick="closeModal('product-detail-modal'); filterByVendor('${p.vendorId}');" class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold hover:bg-indigo-100 flex items-center gap-1">
+                    <i data-lucide="store" class="w-3.5 h-3.5"></i> Visit ${escapeHtml(p.vendorName)}
+                  </button>
+                  <span class="text-slate-400">GSTIN: ${p.vendorGstin}</span>
+                  <span class="text-slate-400">&bull; HSN: ${p.hsn}</span>
+                </div>
+
+                <h2 class="font-display text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">${escapeHtml(p.title)}</h2>
+                
+                <div class="flex items-center gap-3 mt-1.5 text-xs">
+                  <span class="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold flex items-center gap-1">
+                    ${p.rating} ★
+                  </span>
+                  <span class="text-slate-500 font-medium">${p.reviews.length} Verified Ratings &bull; ${p.qa.length} Answered Questions</span>
+                </div>
+              </div>
+
+              <!-- Price & 2026 GST Breakdown -->
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div class="flex items-baseline gap-2.5">
+                  <span class="font-display text-3xl font-extrabold text-slate-900">${formatINR(p.price)}</span>
+                  ${p.mrp > p.price ? `<span class="text-sm text-slate-400 line-through">MRP ${formatINR(p.mrp)}</span>` : ''}
+                  <span class="text-xs font-bold text-emerald-600">+ ${gstSlab}% GST (${formatINR(Math.round(p.price * gstSlab / 100))})</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-1">
+                  Delivering to <strong>${state.deliveryPin.city} (${state.deliveryPin.code})</strong> in <strong>${state.deliveryPin.days} days</strong> via Shiprocket Express.
+                </p>
+              </div>
+
+              <!-- Variant Selectors: Color & Size -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Color: <span class="text-indigo-600">${escapeHtml(sel.color)}</span></label>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${p.colors.map(c => `
+                      <button onclick="selectDetailVariant('color', '${escapeHtml(c)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                        sel.color === c ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                      }">${escapeHtml(c)}</button>
+                    `).join('')}
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 mb-1.5">Size / Edition: <span class="text-indigo-600">${escapeHtml(sel.size)}</span></label>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${p.sizes.map(s => `
+                      <button onclick="selectDetailVariant('size', '${escapeHtml(s)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                        sel.size === s ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                      }">${escapeHtml(s)}</button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">${escapeHtml(p.description)}</p>
+
+              <!-- Add to Cart & Buy Now -->
+              <div class="flex flex-wrap items-center gap-3 pt-2">
+                <button 
+                  onclick="addConfiguredProductToCart('${p.id}', false)"
+                  ${p.stock <= 0 ? 'disabled' : ''}
+                  class="flex-1 py-3 px-5 rounded-xl bg-amber-400 hover:bg-amber-500 disabled:bg-slate-200 text-slate-950 font-extrabold text-sm transition flex items-center justify-center gap-2"
+                >
+                  <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                  <span>${p.stock <= 0 ? 'Out of Stock' : 'Add Variant to Cart'}</span>
+                </button>
+                <button 
+                  onclick="addConfiguredProductToCart('${p.id}', true)"
+                  ${p.stock <= 0 ? 'disabled' : ''}
+                  class="flex-1 py-3 px-5 rounded-xl bg-slate-900 hover:bg-indigo-600 disabled:bg-slate-200 text-white font-bold text-sm transition"
+                >
+                  Buy Now (Express)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Tabs: Customer Reviews, Product Q&A & Frequently Bought Together -->
+          <div class="border-t border-slate-200 bg-slate-50/70 p-5 sm:p-8 space-y-6">
+            
+            <!-- Frequently Bought Together -->
+            <div>
+              <h3 class="font-display font-bold text-sm text-slate-900 uppercase tracking-wider mb-3">Frequently Bought Together</h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                ${similar.map(sim => `
+                  <div class="bg-white p-3 rounded-xl border border-slate-200 flex items-center gap-3">
+                    <img src="${sim.images[0]}" class="w-14 h-14 rounded-lg object-cover shrink-0" alt="${escapeHtml(sim.title)}" />
+                    <div class="min-w-0 flex-1">
+                      <p onclick="openProductDetail('${sim.id}')" class="font-bold text-xs text-slate-900 truncate hover:text-indigo-600 cursor-pointer">${escapeHtml(sim.title)}</p>
+                      <p class="font-extrabold text-xs text-slate-800 mt-0.5">${formatINR(sim.price)}</p>
+                      <button onclick="quickAddToCart('${sim.id}')" class="mt-1 text-[11px] font-bold text-indigo-600 hover:underline">+ Add Bundle Item</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <!-- Reviews & Q&A Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Verified Reviews -->
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
+                <h4 class="font-display font-bold text-sm text-slate-900">Verified Customer Reviews (${p.reviews.length})</h4>
+                <div class="space-y-2.5 max-h-44 overflow-y-auto">
+                  ${p.reviews.length === 0 ? '<p class="text-xs text-slate-400">No reviews yet. Be the first to review!</p>' : p.reviews.map(r => `
+                    <div class="p-2.5 rounded-xl bg-slate-50 text-xs">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800">${escapeHtml(r.user)}</span>
+                        <span class="text-amber-500 font-bold">${'★'.repeat(r.rating)}</span>
+                      </div>
+                      <p class="text-slate-600 mt-1">${escapeHtml(r.comment)}</p>
+                    </div>
+                  `).join('')}
+                </div>
+                <form onsubmit="submitProductReview(event, '${p.id}')" class="pt-2 border-t border-slate-100 flex gap-2">
+                  <select id="rev-rating" class="px-2 py-1.5 rounded-lg border border-slate-200 text-xs bg-white font-bold">
+                    <option value="5">5 ★</option>
+                    <option value="4">4 ★</option>
+                    <option value="3">3 ★</option>
+                  </select>
+                  <input type="text" id="rev-text" required placeholder="Write a verified review..." class="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs outline-none" />
+                  <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold">Post</button>
+                </form>
+              </div>
+
+              <!-- Customer Q&A -->
+              <div class="bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
+                <h4 class="font-display font-bold text-sm text-slate-900">Customer Questions & Seller Answers (${p.qa.length})</h4>
+                <div class="space-y-2.5 max-h-44 overflow-y-auto">
+                  ${p.qa.length === 0 ? '<p class="text-xs text-slate-400">Ask a question about sizing, warranty, or shipping.</p>' : p.qa.map(item => `
+                    <div class="p-2.5 rounded-xl bg-slate-50 text-xs space-y-1">
+                      <p class="font-bold text-slate-900">Q: ${escapeHtml(item.q)}</p>
+                      <p class="text-indigo-700">A: ${escapeHtml(item.a)} <span class="text-[10px] text-slate-400">(${escapeHtml(item.by)})</span></p>
+                    </div>
+                  `).join('')}
+                </div>
+                <form onsubmit="submitProductQuestion(event, '${p.id}')" class="pt-2 border-t border-slate-100 flex gap-2">
+                  <input type="text" id="qa-input" required placeholder="Ask the seller a question..." class="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs outline-none" />
+                  <button type="submit" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold">Ask</button>
+                </form>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function handleImageZoom(e, container) {
+      const img = container.querySelector('img');
+      const rect = container.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      img.style.transformOrigin = `${x}% ${y}%`;
+      img.style.transform = 'scale(1.85)';
+    }
+
+    function resetImageZoom(container) {
+      const img = container.querySelector('img');
+      img.style.transform = 'scale(1)';
+    }
+
+    function selectDetailImage(idx) {
+      state.activeDetailSelection.imgIdx = idx;
+      const p = state.products.find(item => item.id === state.activeDetailSelection.productId);
+      if (p) renderProductDetailBody(p);
+    }
+
+    function selectDetailVariant(type, val) {
+      state.activeDetailSelection[type] = val;
+      const p = state.products.find(item => item.id === state.activeDetailSelection.productId);
+      if (p) renderProductDetailBody(p);
+    }
+
+    function submitProductReview(e, productId) {
+      e.preventDefault();
+      const p = state.products.find(item => item.id === productId);
+      if (!p) return;
+      const rating = parseInt(document.getElementById('rev-rating').value, 10);
+      const comment = document.getElementById('rev-text').value.trim();
+      p.reviews.unshift({ user: state.currentUser.name, rating, comment, date: 'Today' });
+      const avg = p.reviews.reduce((s, r) => s + r.rating, 0) / p.reviews.length;
+      p.rating = avg.toFixed(1);
+      saveState();
+      renderProductDetailBody(p);
+      renderProducts();
+      showToast('Thank you! Your verified review has been published.', 'success');
+    }
+
+    function submitProductQuestion(e, productId) {
+      e.preventDefault();
+      const p = state.products.find(item => item.id === productId);
+      if (!p) return;
+      const q = document.getElementById('qa-input').value.trim();
+      p.qa.unshift({
+        q,
+        a: 'Thank you for asking! Yes, this item ships directly from our verified warehouse with full brand warranty.',
+        by: p.vendorName
+      });
+      saveState();
+      renderProductDetailBody(p);
+      showToast('Question posted & answered by seller!', 'info');
+    }
+
+    function copySeoLink(url) {
+      const temp = document.createElement('input');
+      temp.value = url;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast(`Copied clean URL: ${url}`, 'success');
+    }
+
+    function shareWhatsApp(title, price) {
+      showToast(`WhatsApp Share Ready: "Check out ${title} for ${formatINR(price)} on AURA.in!"`, 'info');
+    }
+
+    // --- 8. WISHLIST MANAGEMENT ---
+    function toggleWishlist(productId) {
+      const idx = state.wishlist.indexOf(productId);
+      if (idx > -1) {
+        state.wishlist.splice(idx, 1);
+        showToast('Removed from Wishlist', 'info');
+      } else {
+        state.wishlist.push(productId);
+        showToast('Saved to your Wishlist!', 'success');
+      }
+      saveState();
+      updateWishlistBadge();
+      renderProducts();
+    }
+
+    function updateWishlistBadge() {
+      document.getElementById('wishlist-badge').textContent = state.wishlist.length;
+    }
+
+    function openWishlistModal() {
+      const body = document.getElementById('wishlist-body');
+      const items = state.products.filter(p => state.wishlist.includes(p.id));
+
+      if (items.length === 0) {
+        body.innerHTML = `<p class="text-center text-sm text-slate-500 py-10">Your wishlist is empty. Click the heart icon on any product to save it for later!</p>`;
+      } else {
+        body.innerHTML = items.map(p => `
+          <div class="flex items-center justify-between gap-4 p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${p.images[0]}" class="w-14 h-14 rounded-lg object-cover shrink-0" alt="${escapeHtml(p.title)}" />
+              <div class="min-w-0">
+                <h4 class="font-bold text-sm text-slate-900 truncate">${escapeHtml(p.title)}</h4>
+                <p class="text-xs font-extrabold text-indigo-600">${formatINR(p.price)}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="quickAddToCart('${p.id}'); toggleWishlist('${p.id}'); closeModal('wishlist-modal');" class="px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-bold">Move to Cart</button>
+              <button onclick="toggleWishlist('${p.id}'); openWishlistModal();" class="p-1.5 text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+        `).join('');
+      }
+      document.getElementById('wishlist-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // --- 9. CART, PROMO COUPONS, PIN LOGISTICS & RAZORPAY CHECKOUT ---
+    function quickAddToCart(productId) {
+      const p = state.products.find(item => item.id === productId);
+      if (!p || p.stock <= 0) return;
+      addItemToCartState(p, p.sizes[0] || 'Standard', p.colors[0] || 'Default', false);
+    }
+
+    function addConfiguredProductToCart(productId, openCheckoutImmediately) {
+      const p = state.products.find(item => item.id === productId);
+      if (!p || p.stock <= 0) return;
+      const sel = state.activeDetailSelection;
+      closeModal('product-detail-modal');
+      addItemToCartState(p, sel.size, sel.color, openCheckoutImmediately);
+    }
+
+    function addItemToCartState(p, size, color, openCheckoutImmediately) {
+      const variantKey = `${p.id}__${size}__${color}`;
+      const existing = state.cart.find(c => c.variantKey === variantKey);
+
+      if (existing) {
+        if (existing.qty >= p.stock) {
+          showToast(`Maximum stock (${p.stock}) reached!`, 'info');
+          return;
+        }
+        existing.qty += 1;
+      } else {
+        state.cart.push({
+          variantKey,
+          productId: p.id,
+          title: p.title,
+          price: p.price,
+          image: p.images[0],
+          vendorId: p.vendorId,
+          vendorName: p.vendorName,
+          vendorGstin: p.vendorGstin,
+          hsn: p.hsn,
+          category: p.category,
+          size,
+          color,
+          qty: 1
+        });
+      }
+
+      saveState();
+      updateCartUI();
+      if (openCheckoutImmediately) {
+        toggleCartDrawer(true);
+        setCartStep('checkout');
+      } else {
+        showToast(`Added "${p.title}" (${size}, ${color}) to cart!`, 'success');
+      }
+    }
+
+    function updateCartQty(variantKey, delta) {
+      const item = state.cart.find(c => c.variantKey === variantKey);
+      if (!item) return;
+      const p = state.products.find(prod => prod.id === item.productId);
+      const nextQty = item.qty + delta;
+      if (nextQty <= 0) {
+        state.cart = state.cart.filter(c => c.variantKey !== variantKey);
+      } else if (p && nextQty > p.stock) {
+        showToast(`Only ${p.stock} units available.`, 'info');
+        return;
+      } else {
+        item.qty = nextQty;
+      }
+      saveState();
+      updateCartUI();
+    }
+
+    function applyCouponCode() {
+      const code = document.getElementById('coupon-input').value.trim().toUpperCase();
+      if (!code) return;
+      if (['WELCOME10', 'AURA500', 'FREESHIP'].includes(code)) {
+        state.appliedCoupon = code;
+        updateCartUI();
+        showToast(`Coupon "${code}" applied!`, 'success');
+      } else {
+        showToast('Invalid code. Try WELCOME10, AURA500, or FREESHIP.', 'error');
+      }
+    }
+
+    function removeCoupon() {
+      state.appliedCoupon = null;
+      document.getElementById('coupon-input').value = '';
+      updateCartUI();
+    }
+
+    function applyRecoveryCoupon() {
+      state.appliedCoupon = 'WELCOME10';
+      dismissAbandonedBanner();
+      toggleCartDrawer(true);
+      updateCartUI();
+      showToast('WELCOME10 applied! Enjoy 10% OFF your cart.', 'success');
+    }
+
+    function dismissAbandonedBanner() {
+      document.getElementById('abandoned-cart-banner').classList.add('hidden');
+    }
+
+    function triggerAbandonedCartDemo() {
+      if (state.cart.length === 0) {
+        quickAddToCart('p-101');
+      }
+      document.getElementById('abandoned-cart-banner').classList.remove('hidden');
+      showToast('Simulated WhatsApp Cart Recovery Alert triggered!', 'info');
+    }
+
+    function openPinModal() {
+      document.getElementById('pin-modal-input').value = state.deliveryPin.code;
+      document.getElementById('pin-modal').classList.remove('hidden');
+    }
+
+    function applyPinCodeFromModal() {
+      const pin = document.getElementById('pin-modal-input').value.trim();
+      if (!/^\d{6}$/.test(pin)) {
+        showToast('Please enter a valid 6-digit Indian PIN code.', 'error');
+        return;
+      }
+      setDeliveryPin(pin);
+      closeModal('pin-modal');
+    }
+
+    function setDeliveryPin(pin) {
+      if (!/^\d{6}$/.test(pin)) {
+        showToast('Enter a valid 6-digit PIN code.', 'error');
+        return;
+      }
+      const prefix = pin.charAt(0);
+      const zones = {
+        '4': { city: 'Mumbai / Pune', state: 'Maharashtra', zone: 'Metro', fee: 0, days: 2 },
+        '5': { city: 'Bengaluru / Hyderabad', state: 'Karnataka', zone: 'Metro', fee: 0, days: 2 },
+        '1': { city: 'New Delhi / NCR', state: 'Delhi', zone: 'Metro', fee: 0, days: 2 },
+        '7': { city: 'Kolkata / East', state: 'West Bengal', zone: 'Regional', fee: 49, days: 3 },
+        '6': { city: 'Chennai / Kochi', state: 'Tamil Nadu', zone: 'Regional', fee: 49, days: 3 }
+      };
+      const info = zones[prefix] || { city: 'Rest of India', state: 'India', zone: 'National', fee: 79, days: 4 };
+      state.deliveryPin = { code: pin, ...info };
+      saveState();
+
+      document.getElementById('header-pincode-display').textContent = `${info.city.split('/')[0].trim()} ${pin}`;
+      document.getElementById('cart-pin-input').value = pin;
+      document.getElementById('cart-city-label').textContent = `${info.city} (${info.zone})`;
+      document.getElementById('cart-eta-badge').textContent = `Est. ${info.days} Days`;
+      updateCartUI();
+      renderProducts();
+      showToast(`Delivery updated to ${info.city} (${pin})`, 'success');
+    }
+
+    function computeCartFinancials() {
+      let subtotal = 0;
+      let gstTotal = 0;
+
+      state.cart.forEach(item => {
+        const lineSub = item.price * item.qty;
+        const rate = calculate2026GstRate(item);
+        subtotal += lineSub;
+        gstTotal += Math.round((lineSub * rate) / 100);
+      });
+
+      let discount = 0;
+      if (state.appliedCoupon === 'WELCOME10') {
+        discount = Math.round(subtotal * 0.10);
+      } else if (state.appliedCoupon === 'AURA500' && subtotal >= 2000) {
+        discount = 500;
+      }
+
+      let shippingFee = subtotal >= 999 || subtotal === 0 ? 0 : state.deliveryPin.fee;
+      if (state.appliedCoupon === 'FREESHIP') shippingFee = 0;
+
+      const grandTotal = Math.max(0, subtotal - discount + gstTotal + shippingFee);
+      return { subtotal, discount, gstTotal, shippingFee, grandTotal };
+    }
+
+    function updateCartUI() {
+      const totalItems = state.cart.reduce((s, c) => s + c.qty, 0);
+      document.getElementById('cart-badge').textContent = totalItems;
+      document.getElementById('drawer-cart-count').textContent = totalItems;
+
+      const { subtotal, discount, gstTotal, shippingFee, grandTotal } = computeCartFinancials();
+      document.getElementById('sum-subtotal').textContent = formatINR(subtotal);
+      document.getElementById('sum-gst').textContent = formatINR(gstTotal);
+      document.getElementById('sum-zone-label').textContent = state.deliveryPin.zone;
+      document.getElementById('sum-shipping').textContent = shippingFee === 0 ? 'FREE' : formatINR(shippingFee);
+      document.getElementById('sum-total').textContent = formatINR(grandTotal);
+      document.getElementById('rzp-header-amount').textContent = formatINR(grandTotal);
+
+      const discRow = document.getElementById('sum-discount-row');
+      if (discount > 0) {
+        discRow.classList.remove('hidden');
+        document.getElementById('sum-discount').textContent = `-${formatINR(discount)}`;
+      } else {
+        discRow.classList.add('hidden');
+      }
+
+      const couponPill = document.getElementById('applied-coupon-pill');
+      if (state.appliedCoupon) {
+        couponPill.classList.remove('hidden');
+        document.getElementById('applied-coupon-text').textContent = `Coupon ${state.appliedCoupon} active`;
+      } else {
+        couponPill.classList.add('hidden');
+      }
+
+      const listEl = document.getElementById('cart-items-list');
+      const payBtn = document.getElementById('proceed-to-pay-btn');
+
+      if (state.cart.length === 0) {
+        payBtn.disabled = true;
+        listEl.innerHTML = `
+          <div class="text-center py-10">
+            <p class="font-display font-bold text-slate-800 text-sm">Your AURA cart is empty</p>
+            <p class="text-xs text-slate-500 mt-1">Add items from verified vendors to unlock free shipping above ₹999.</p>
+          </div>
+        `;
+        return;
+      }
+
+      payBtn.disabled = false;
+      listEl.innerHTML = state.cart.map(item => `
+        <div class="flex gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover shrink-0" alt="${escapeHtml(item.title)}" />
+          <div class="flex-1 min-w-0">
+            <h4 class="font-bold text-xs text-slate-900 truncate">${escapeHtml(item.title)}</h4>
+            <p class="text-[10px] text-slate-500">Sold by ${escapeHtml(item.vendorName)} &bull; ${escapeHtml(item.size)} / ${escapeHtml(item.color)}</p>
+            <div class="flex items-center justify-between mt-2">
+              <div class="inline-flex items-center bg-white border border-slate-200 rounded-lg">
+                <button onclick="updateCartQty('${item.variantKey}', -1)" class="px-2 py-0.5 text-xs font-bold">&minus;</button>
+                <span class="px-2 text-xs font-bold">${item.qty}</span>
+                <button onclick="updateCartQty('${item.variantKey}', 1)" class="px-2 py-0.5 text-xs font-bold">+</button>
+              </div>
+              <span class="font-display font-extrabold text-xs text-slate-900">${formatINR(item.price * item.qty)}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleCartDrawer(open) {
+      const drawer = document.getElementById('cart-drawer');
+      if (open) {
+        setCartStep('items');
+        drawer.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      } else {
+        drawer.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
+      lucide.createIcons();
+    }
+
+    function setCartStep(step) {
+      document.getElementById('cart-step-items').classList.toggle('hidden', step !== 'items');
+      document.getElementById('cart-step-checkout').classList.toggle('hidden', step !== 'checkout');
+      document.getElementById('cart-step-success').classList.toggle('hidden', step !== 'success');
+      document.getElementById('cart-footer').classList.toggle('hidden', step === 'success');
+      lucide.createIcons();
+    }
+
+    function processRazorpayOrder(e) {
+      e.preventDefault();
+      if (state.cart.length === 0) return;
+
+      const btn = document.getElementById('rzp-pay-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<span>Processing via Razorpay Gateway...</span>`;
+
+      setTimeout(() => {
+        const { subtotal, discount, gstTotal, shippingFee, grandTotal } = computeCartFinancials();
+        const orderId = 'AUR-' + Math.floor(100000 + Math.random() * 900000);
+        const awb = 'SRK' + Math.floor(10000000 + Math.random() * 90000000) + 'IN';
+        const payMode = document.querySelector('input[name="pay-mode"]:checked').value;
+
+        const orderItems = state.cart.map(c => {
+          const prod = state.products.find(p => p.id === c.productId);
+          if (prod) prod.stock = Math.max(0, prod.stock - c.qty);
+          const rate = calculate2026GstRate(c);
+          return {
+            ...c,
+            gstRate: rate,
+            gstAmount: Math.round((c.price * c.qty * rate) / 100)
+          };
+        });
+
+        const newOrder = {
+          id: orderId,
+          awb,
+          date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          buyerName: document.getElementById('chk-name').value.trim(),
+          buyerAddress: document.getElementById('chk-address').value.trim(),
+          buyerGstin: document.getElementById('chk-gstin').value.trim().toUpperCase(),
+          paymentMode: payMode,
+          status: 'Confirmed',
+          shippingFee,
+          discount,
+          items: orderItems,
+          subtotal,
+          gstTotal,
+          grandTotal
+        };
+
+        state.orders.unshift(newOrder);
+        state.cart = [];
+        state.appliedCoupon = null;
+        saveState();
+
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="lock" class="w-4 h-4"></i><span>Pay & Confirm Order</span>`;
+
+        document.getElementById('last-order-summary').innerHTML = `
+          <div class="flex justify-between"><span class="text-slate-500">Order ID:</span><span class="font-bold">${orderId}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Shiprocket AWB:</span><span class="font-mono font-bold text-indigo-600">${awb}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Payment Mode:</span><span class="font-semibold">${payMode}</span></div>
+          <div class="flex justify-between pt-1.5 border-t border-slate-200"><span class="text-slate-500">Total Paid:</span><span class="font-extrabold text-emerald-600">${formatINR(grandTotal)}</span></div>
+        `;
+        document.getElementById('view-last-invoice-btn').onclick = () => openGstInvoice(orderId);
+
+        updateCartUI();
+        renderProducts();
+        updateRoleHeaderUI();
+        updateAdminBadges();
+        setCartStep('success');
+        showToast(`Order ${orderId} confirmed!`, 'success');
+      }, 650);
+    }
+
+    // --- 10. BUYER ORDER TRACKING & AUTOMATED 2026 GST INVOICE ---
+    function openOrdersModal() {
+      const container = document.getElementById('buyer-orders-list');
+      const steps = ['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+
+      if (state.orders.length === 0) {
+        container.innerHTML = `<p class="text-center text-sm text-slate-500 py-10">No orders placed yet.</p>`;
+      } else {
+        container.innerHTML = state.orders.map(ord => {
+          const currentIdx = steps.indexOf(ord.status);
+          const isCancelled = ord.status === 'Cancelled';
+
+          return `
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                <div>
+                  <span class="font-display font-extrabold text-sm text-slate-900">${ord.id}</span>
+                  <span class="text-xs text-slate-500 ml-2">${ord.date}</span>
+                  <p class="text-[11px] font-mono text-indigo-600 mt-0.5">Shiprocket AWB: ${ord.awb}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="openGstInvoice('${ord.id}')" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-indigo-500 text-xs font-bold text-slate-800 flex items-center gap-1">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-600"></i> GST Invoice
+                  </button>
+                  ${!isCancelled && currentIdx < 2 ? `
+                    <button onclick="cancelBuyerOrder('${ord.id}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 text-xs font-bold">Cancel</button>
+                  ` : ''}
+                </div>
+              </div>
+
+              <!-- Step-by-Step Shipment Tracker -->
+              ${isCancelled ? `
+                <div class="px-3 py-2 rounded-xl bg-rose-100 text-rose-800 text-xs font-bold">Order Cancelled & Refund Initiated</div>
+              ` : `
+                <div class="grid grid-cols-5 gap-1 pt-1">
+                  ${steps.map((st, i) => `
+                    <div class="text-center">
+                      <div class="h-1.5 rounded-full mb-1 ${i <= currentIdx ? 'bg-emerald-500' : 'bg-slate-200'}"></div>
+                      <span class="text-[10px] font-bold ${i <= currentIdx ? 'text-emerald-700' : 'text-slate-400'}">${st}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+
+              <!-- Items -->
+              <div class="space-y-1.5 pt-1">
+                ${ord.items.map(it => `
+                  <div class="flex items-center justify-between text-xs bg-white p-2 rounded-lg border border-slate-100">
+                    <span><strong>${escapeHtml(it.title)}</strong> (${it.size}, ${it.color}) &times; ${it.qty} <span class="text-slate-400">by ${escapeHtml(it.vendorName)}</span></span>
+                    <span class="font-bold">${formatINR(it.price * it.qty)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('orders-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function cancelBuyerOrder(orderId) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+      ord.status = 'Cancelled';
+      ord.items.forEach(it => {
+        const prod = state.products.find(p => p.id === it.productId);
+        if (prod) prod.stock += it.qty;
+      });
+      saveState();
+      openOrdersModal();
+      renderProducts();
+      showToast(`Order ${orderId} cancelled & stock restored.`, 'info');
+    }
+
+    function openGstInvoice(orderId) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+
+      document.getElementById('invoice-print-area').innerHTML = `
+        <div class="border border-slate-300 rounded-xl p-6 space-y-5">
+          <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+            <div>
+              <h2 class="font-display font-extrabold text-xl text-slate-900">TAX INVOICE</h2>
+              <p class="text-slate-500 mt-0.5">Generated via AURA Multi-Vendor Marketplace (2026 GST Compliant)</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-slate-900">Invoice #: INV-${ord.id}</p>
+              <p class="text-slate-500">Order Date: ${ord.date}</p>
+              <p class="font-mono text-indigo-600 font-semibold">AWB: ${ord.awb}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-3 rounded-lg bg-slate-50">
+              <p class="font-bold uppercase text-[10px] text-slate-400">Billed To (Customer)</p>
+              <p class="font-bold text-slate-900 mt-1">${escapeHtml(ord.buyerName)}</p>
+              <p class="text-slate-600 mt-0.5">${escapeHtml(ord.buyerAddress)}</p>
+              ${ord.buyerGstin ? `<p class="font-mono font-bold text-slate-800 mt-1">Buyer GSTIN: ${ord.buyerGstin}</p>` : ''}
+            </div>
+            <div class="p-3 rounded-lg bg-slate-50">
+              <p class="font-bold uppercase text-[10px] text-slate-400">Marketplace Operator</p>
+              <p class="font-bold text-slate-900 mt-1">AURA Commerce India Pvt. Ltd.</p>
+              <p class="text-slate-600 mt-0.5">BKC, Mumbai, Maharashtra 400051</p>
+              <p class="font-mono text-slate-700 mt-1">Platform GSTIN: 27AABCA9901L1Z8</p>
+            </div>
+          </div>
+
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b-2 border-slate-300 text-[11px] uppercase text-slate-600">
+                <th class="py-2">Item & Seller GSTIN</th>
+                <th class="py-2">HSN</th>
+                <th class="py-2 text-right">Qty</th>
+                <th class="py-2 text-right">Taxable</th>
+                <th class="py-2 text-right">CGST + SGST</th>
+                <th class="py-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              ${ord.items.map(it => {
+                const taxable = it.price * it.qty;
+                const halfGst = (it.gstAmount / 2).toFixed(2);
+                return `
+                  <tr>
+                    <td class="py-2.5">
+                      <p class="font-bold text-slate-900">${escapeHtml(it.title)}</p>
+                      <p class="text-[10px] text-slate-500">Sold by: ${escapeHtml(it.vendorName)} (GSTIN: ${it.vendorGstin})</p>
+                    </td>
+                    <td class="py-2.5 font-mono">${it.hsn}</td>
+                    <td class="py-2.5 text-right">${it.qty}</td>
+                    <td class="py-2.5 text-right">${formatINR(taxable)}</td>
+                    <td class="py-2.5 text-right">${it.gstRate}% (₹${halfGst} + ₹${halfGst})</td>
+                    <td class="py-2.5 text-right font-bold">${formatINR(taxable + it.gstAmount)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="flex justify-end pt-3 border-t border-slate-200">
+            <div class="w-64 space-y-1">
+              <div class="flex justify-between"><span>Taxable Subtotal:</span><span>${formatINR(ord.subtotal)}</span></div>
+              ${ord.discount > 0 ? `<div class="flex justify-between text-emerald-600"><span>Promo Discount:</span><span>-${formatINR(ord.discount)}</span></div>` : ''}
+              <div class="flex justify-between"><span>Total GST Collected:</span><span>${formatINR(ord.gstTotal)}</span></div>
+              <div class="flex justify-between"><span>Shipping Charges:</span><span>${ord.shippingFee === 0 ? 'FREE' : formatINR(ord.shippingFee)}</span></div>
+              <div class="flex justify-between font-extrabold text-sm text-slate-900 pt-2 border-t border-slate-300">
+                <span>Grand Total Paid:</span><span>${formatINR(ord.grandTotal)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('invoice-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    // --- 11. SELLER STUDIO (MULTI-IMAGE UPLOAD, VARIANTS, VENDOR OMS & PAYOUTS) ---
+    function openSellerStudio() {
+      // Ensure user has a vendor profile if they open Seller Studio
+      if (!state.currentUser.vendorId) {
+        state.currentUser.vendorId = 'v-urbancraft';
+        state.currentUser.storeName = 'UrbanCraft Studio';
+      }
+      document.getElementById('studio-store-badge').textContent = state.currentUser.storeName;
+      document.getElementById('up-preview-vendor').textContent = `Sold by ${state.currentUser.storeName}`;
+
+      const isAdmin = state.currentUser.role === 'admin';
+      document.getElementById('up-approval-note').textContent = isAdmin ? 'Auto-Approved (Admin)' : 'Requires Admin Approval';
+      document.getElementById('up-submit-text').textContent = isAdmin ? 'Publish Directly to Store' : 'Submit Listing for Approval';
+
+      refreshSellerFinancials();
+      switchSellerTab('upload');
+      updateUploadPreview();
+      document.getElementById('seller-studio-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function switchSellerTab(tab) {
+      document.getElementById('seller-tab-upload').classList.toggle('hidden', tab !== 'upload');
+      document.getElementById('seller-tab-inventory').classList.toggle('hidden', tab !== 'inventory');
+      document.getElementById('seller-tab-orders').classList.toggle('hidden', tab !== 'orders');
+
+      ['upload', 'inventory', 'orders'].forEach(t => {
+        const btn = document.getElementById(`stab-${t}`);
+        btn.className = t === tab
+          ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold transition'
+          : 'px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition';
+      });
+
+      if (tab === 'inventory') renderSellerInventory();
+      if (tab === 'orders') renderSellerOrders();
+      lucide.createIcons();
+    }
+
+    function refreshSellerFinancials() {
+      const vId = state.currentUser.vendorId;
+      let gross = 0;
+      state.orders.forEach(ord => {
+        if (ord.status === 'Cancelled') return;
+        ord.items.forEach(it => {
+          if (it.vendorId === vId) gross += it.price * it.qty;
+        });
+      });
+
+      const comm = Math.round((gross * state.commissionRate) / 100);
+      const net = gross - comm;
+      const myProds = state.products.filter(p => p.vendorId === vId);
+      const approvedCount = myProds.filter(p => p.status === 'approved').length;
+      const pendingCount = myProds.filter(p => p.status === 'pending').length;
+
+      document.getElementById('vendor-stat-gross').textContent = formatINR(gross);
+      document.getElementById('vendor-comm-pct').textContent = state.commissionRate;
+      document.getElementById('vendor-stat-comm').textContent = `-${formatINR(comm)}`;
+      document.getElementById('vendor-stat-net').textContent = formatINR(net);
+      document.getElementById('vendor-stat-skus').textContent = `${approvedCount} Live / ${pendingCount} Pending`;
+    }
+
+    function handleMultiImageUpload(e) {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          state.tempUploadedImages.push(ev.target.result);
+          renderUploadedThumbs();
+          updateUploadPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      showToast(`Added ${files.length} photo(s) to product gallery!`, 'success');
+    }
+
+    function renderUploadedThumbs() {
+      const strip = document.getElementById('uploaded-thumbs-strip');
+      strip.innerHTML = state.tempUploadedImages.map((src, i) => `
+        <div class="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0">
+          <img src="${src}" class="w-full h-full object-cover" />
+          <button type="button" onclick="state.tempUploadedImages.splice(${i},1); renderUploadedThumbs(); updateUploadPreview();" class="absolute top-0 right-0 bg-rose-600 text-white text-[9px] px-1">x</button>
+        </div>
+      `).join('');
+    }
+
+    function updateUploadPreview() {
+      const title = document.getElementById('up-title').value.trim() || 'Your Product Title';
+      const price = Number(document.getElementById('up-price').value) || 1899;
+      const mrp = Number(document.getElementById('up-mrp').value) || Math.round(price * 1.4);
+      const stock = document.getElementById('up-stock').value || 15;
+      const category = document.getElementById('up-category').value;
+      const desc = document.getElementById('up-desc').value.trim() || 'Product highlights will appear here.';
+      const urlVal = document.getElementById('up-image-url').value.trim();
+
+      const gstSlab = calculate2026GstRate({ category, price });
+      document.getElementById('up-gst-indicator').textContent = `${gstSlab}% GST (2026 Rule)`;
+
+      const img = state.tempUploadedImages[0] || urlVal || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80';
+      document.getElementById('up-preview-img').src = img;
+      document.getElementById('up-preview-cat').textContent = category;
+      document.getElementById('up-preview-title').textContent = title;
+      document.getElementById('up-preview-desc').textContent = desc;
+      document.getElementById('up-preview-price').textContent = formatINR(price);
+      document.getElementById('up-preview-mrp').textContent = formatINR(mrp);
+      document.getElementById('up-preview-stock').textContent = `${stock} in stock`;
+    }
+
+    function handleSellerProductUpload(e) {
+      e.preventDefault();
+      const title = document.getElementById('up-title').value.trim();
+      const price = parseInt(document.getElementById('up-price').value, 10);
+      const mrp = parseInt(document.getElementById('up-mrp').value, 10) || Math.round(price * 1.35);
+      const stock = parseInt(document.getElementById('up-stock').value, 10);
+      const category = document.getElementById('up-category').value;
+      const hsn = document.getElementById('up-hsn').value.trim() || '9999';
+      const sizes = document.getElementById('up-sizes').value.split(',').map(s => s.trim()).filter(Boolean);
+      const colors = document.getElementById('up-colors').value.split(',').map(c => c.trim()).filter(Boolean);
+      const desc = document.getElementById('up-desc').value.trim();
+      const urlVal = document.getElementById('up-image-url').value.trim();
+
+      const images = state.tempUploadedImages.length > 0
+        ? [...state.tempUploadedImages]
+        : [urlVal || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80'];
+
+      const vendor = state.vendors.find(v => v.id === state.currentUser.vendorId) || state.vendors[0];
+      const isAdmin = state.currentUser.role === 'admin';
+
+      const newProd = {
+        id: 'p-' + Date.now(),
+        slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title,
+        price,
+        mrp,
+        category,
+        hsn,
+        stock,
+        vendorId: vendor.id,
+        vendorName: vendor.name,
+        vendorGstin: vendor.gstin,
+        status: isAdmin ? 'approved' : 'pending',
+        isFlashDeal: false,
+        rating: 5.0,
+        sizes: sizes.length ? sizes : ['Standard'],
+        colors: colors.length ? colors : ['Default'],
+        images,
+        description: desc,
+        reviews: [],
+        qa: []
+      };
+
+      state.products.unshift(newProd);
+      state.tempUploadedImages = [];
+      document.getElementById('seller-upload-form').reset();
+      renderUploadedThumbs();
+      saveState();
+
+      refreshSellerFinancials();
+      renderProducts();
+      updateAdminBadges();
+
+      if (isAdmin) {
+        showToast(`"${title}" published live to AURA Marketplace!`, 'success');
+      } else {
+        showToast(`"${title}" submitted! Super Admin can approve it in the Admin Panel.`, 'info');
+      }
+      switchSellerTab('inventory');
+    }
+
+    function renderSellerInventory() {
+      const vId = state.currentUser.vendorId;
+      const myProds = state.products.filter(p => p.vendorId === vId);
+      const box = document.getElementById('seller-tab-inventory');
+
+      box.innerHTML = myProds.map(p => `
+        <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <div class="flex items-center gap-3 min-w-0">
+            <img src="${p.images[0]}" class="w-12 h-12 rounded-lg object-cover shrink-0" />
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-xs text-slate-900 truncate">${escapeHtml(p.title)}</h4>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                  p.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800'
+                }">${p.status}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">${formatINR(p.price)} &bull; Stock: <strong>${p.stock}</strong> &bull; HSN: ${p.hsn}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="restockProduct('${p.id}', 10)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:border-indigo-500 text-[11px] font-bold">+10 Stock</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSellerOrders() {
+      const vId = state.currentUser.vendorId;
+      const matchingOrders = state.orders.filter(o => o.items.some(i => i.vendorId === vId));
+      const box = document.getElementById('seller-tab-orders');
+
+      if (matchingOrders.length === 0) {
+        box.innerHTML = `<p class="text-center text-xs text-slate-500 py-8">No customer orders for this vendor store yet.</p>`;
+        return;
+      }
+
+      box.innerHTML = matchingOrders.map(ord => `
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="font-bold text-xs text-slate-900">${ord.id} &bull; <span class="text-indigo-600">${ord.status}</span></p>
+            <p class="text-[11px] text-slate-500">Buyer: ${escapeHtml(ord.buyerName)} &bull; AWB: ${ord.awb}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <select onchange="updateOrderStatus('${ord.id}', this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-bold">
+              ${['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'].map(s => `
+                <option value="${s}" ${ord.status === s ? 'selected' : ''}>${s}</option>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- 12. SUPER ADMIN PANEL (APPROVALS, COMMISSIONS, ANALYTICS & GLOBAL OMS) ---
+    function openAdminPanel() {
+      updateAdminBadges();
+      renderAdminDashboard();
+      document.getElementById('admin-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function updateAdminBadges() {
+      const pendingCount = state.products.filter(p => p.status === 'pending').length;
+      const badge = document.getElementById('nav-pending-badge');
+      badge.textContent = pendingCount;
+      badge.classList.toggle('hidden', pendingCount === 0);
+    }
+
+    function updatePlatformCommission() {
+      const val = parseInt(document.getElementById('admin-commission-input').value, 10);
+      if (isNaN(val) || val < 0 || val > 50) {
+        showToast('Commission must be between 0% and 50%.', 'error');
+        return;
+      }
+      state.commissionRate = val;
+      saveState();
+      updateRoleHeaderUI();
+      renderAdminDashboard();
+      showToast(`Platform commission updated to ${val}%`, 'success');
+    }
+
+    function renderAdminDashboard() {
+      const validOrders = state.orders.filter(o => o.status !== 'Cancelled');
+      const gmv = validOrders.reduce((s, o) => s + o.grandTotal, 0);
+      const taxableSubtotal = validOrders.reduce((s, o) => s + o.subtotal, 0);
+      const commissionEarned = Math.round((taxableSubtotal * state.commissionRate) / 100);
+      const pendingProds = state.products.filter(p => p.status === 'pending');
+      const lowStockProds = state.products.filter(p => p.stock <= 5);
+
+      document.getElementById('admin-stat-gmv').textContent = formatINR(gmv);
+      document.getElementById('admin-stat-orders').textContent = `${validOrders.length} active orders`;
+      document.getElementById('admin-stat-commission').textContent = formatINR(commissionEarned);
+      document.getElementById('admin-stat-pending').textContent = pendingProds.length;
+      document.getElementById('admin-commission-input').value = state.commissionRate;
+
+      // 1. Approval Queue
+      const appBox = document.getElementById('admin-approval-list');
+      if (pendingProds.length === 0) {
+        appBox.innerHTML = `<div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">All seller product submissions have been reviewed!</div>`;
+      } else {
+        appBox.innerHTML = pendingProds.map(p => `
+          <div class="p-3 rounded-xl border border-amber-200 bg-amber-50/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+              <img src="${p.images[0]}" class="w-12 h-12 rounded-lg object-cover shrink-0" />
+              <div class="min-w-0">
+                <p class="font-bold text-xs text-slate-900 truncate">${escapeHtml(p.title)}</p>
+                <p class="text-[11px] text-slate-600">Vendor: <strong>${escapeHtml(p.vendorName)}</strong> &bull; ${formatINR(p.price)} &bull; HSN ${p.hsn}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button onclick="moderateProduct('${p.id}', 'approved')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold">Approve</button>
+              <button onclick="moderateProduct('${p.id}', 'rejected')" class="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">Reject</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 2. Low-Stock Alerts
+      const lowBox = document.getElementById('admin-lowstock-list');
+      if (lowStockProds.length === 0) {
+        lowBox.innerHTML = `<p class="text-xs text-slate-500">All SKUs have healthy stock levels.</p>`;
+      } else {
+        lowBox.innerHTML = lowStockProds.map(p => `
+          <div class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 text-xs">
+            <div class="min-w-0">
+              <p class="font-bold text-rose-950 truncate">${escapeHtml(p.title)}</p>
+              <p class="text-[10px] text-rose-700">Only <strong>${p.stock} left</strong> &bull; ${escapeHtml(p.vendorName)}</p>
+            </div>
+            <button onclick="restockProduct('${p.id}', 15); renderAdminDashboard();" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[10px] font-bold shrink-0">+15 Restock</button>
+          </div>
+        `).join('');
+      }
+
+      // 3. Category Distribution Chart
+      const chartBox = document.getElementById('admin-category-chart');
+      const totalProds = state.products.length || 1;
+      chartBox.innerHTML = CATEGORIES.filter(c => c !== 'All').map(cat => {
+        const count = state.products.filter(p => p.category === cat).length;
+        const pct = Math.round((count / totalProds) * 100);
+        return `
+          <div>
+            <div class="flex justify-between text-[11px] font-semibold mb-1">
+              <span>${cat}</span>
+              <span>${count} SKUs (${pct}%)</span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-200 overflow-hidden">
+              <div class="h-full bg-indigo-600 rounded-full" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 4. Global OMS
+      const ordBox = document.getElementById('admin-orders-list');
+      ordBox.innerHTML = state.orders.map(ord => `
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div>
+            <span class="font-bold text-slate-900">${ord.id}</span> &bull; <span>${escapeHtml(ord.buyerName)}</span> &bull; <strong class="text-emerald-700">${formatINR(ord.grandTotal)}</strong>
+            <span class="ml-2 font-mono text-[11px] text-slate-500">AWB: ${ord.awb}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openGstInvoice('${ord.id}')" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 font-semibold">Invoice</button>
+            <select onchange="updateOrderStatus('${ord.id}', this.value)" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold">
+              ${['Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'].map(s => `
+                <option value="${s}" ${ord.status === s ? 'selected' : ''}>${s}</option>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function moderateProduct(productId, decision) {
+      if (decision === 'rejected') {
+        state.products = state.products.filter(p => p.id !== productId);
+        showToast('Listing rejected and removed.', 'info');
+      } else {
+        const p = state.products.find(item => item.id === productId);
+        if (p) p.status = 'approved';
+        showToast('Listing approved and now live on the storefront!', 'success');
+      }
+      saveState();
+      updateAdminBadges();
+      renderAdminDashboard();
+      renderProducts();
+    }
+
+    function restockProduct(productId, qty) {
+      const p = state.products.find(item => item.id === productId);
+      if (!p) return;
+      p.stock += qty;
+      saveState();
+      renderProducts();
+      renderSellerInventory();
+      showToast(`Added +${qty} units to "${p.title}"`, 'success');
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+      const ord = state.orders.find(o => o.id === orderId);
+      if (!ord) return;
+      ord.status = newStatus;
+      saveState();
+      showToast(`Order ${orderId} updated to "${newStatus}"`, 'success');
+    }
+
+    // --- 13. TIMERS, MODALS & UTILS ---
+    function startFlashSaleCountdown() {
+      let totalSeconds = 2 * 3600 + 45 * 60 + 19;
+      setInterval(() => {
+        if (totalSeconds <= 0) totalSeconds = 3 * 3600;
+        totalSeconds--;
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
+        const el = document.getElementById('flash-timer');
+        if (el) el.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    function openAuthModal(defaultRole) {
+      if (defaultRole) {
+        document.getElementById('auth-role-select').value = defaultRole;
+        toggleSellerRegFields(defaultRole);
+      }
+      document.getElementById('auth-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function setMainView(view) {
+      if (view === 'storefront') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const styles = {
+        success: 'bg-slate-900 text-white border-emerald-500/50',
+        error: 'bg-rose-600 text-white border-rose-400',
+        info: 'bg-slate-800 text-white border-amber-400/50'
+      };
+      toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold transition-all duration-300 translate-y-2 opacity-0 ${styles[type] || styles.success}`;
+      toast.innerHTML = `<span class="flex-1">${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.addEventListener('DOMContentLoaded', initMarketplace);
+  </script>
+</body>
+</html>
